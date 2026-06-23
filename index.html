@@ -1,16 +1,350 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interview Prep Assistant</title>
-    <meta name="description" content="AI-powered interview practice — record your answer, get instant coaching feedback." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Interview Prep Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--panel:#21262d;--border:#30363d;--accent:#2ea043;--accent2:#58a6ff;--danger:#f85149;--text:#e6edf3;--muted:#8b949e;--faint:#3d444d;--radius:10px;--font-body:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+button{cursor:pointer;font-family:inherit;font-size:.875rem;font-weight:500;border:none;border-radius:var(--radius);padding:.5rem 1rem;transition:opacity .15s,background .15s,transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+textarea,input,select{font-family:var(--font-body);font-size:.875rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .75rem;outline:none;width:100%;transition:border-color .15s}
+textarea:focus,input:focus,select:focus{border-color:var(--accent2)}
+textarea{resize:vertical;line-height:1.6}
+label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.fade-up{animation:fadeUp .28s ease both}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.5)}50%{box-shadow:0 0 0 8px rgba(248,81,73,0)}}
+.rec-pulse{animation:recPulse 1.2s ease infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.md-content h1,.md-content h2,.md-content h3{color:var(--accent2);margin:.9rem 0 .35rem;font-size:.95rem}
+.md-content strong{color:var(--text)}
+.md-content ul,.md-content ol{padding-left:1.3rem;margin:.35rem 0}
+.md-content li{margin-bottom:.2rem;line-height:1.65}
+.md-content p{margin-bottom:.55rem;line-height:1.75}
+@media(max-width:768px){.main-grid{grid-template-columns:1fr !important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+function MD({children}){
+  const html=(children||"")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/^### (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^## (.+)$/gm,"<h2>$1</h2>")
+    .replace(/^# (.+)$/gm,"<h1>$1</h1>")
+    .replace(/^\d+\. (.+)$/gm,"<li>$1</li>")
+    .replace(/^[-*] (.+)$/gm,"<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g,s=>`<ul>${s}</ul>`)
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\n\n/g,"</p><p>")
+    .replace(/^(?!<[huo])/gm,"");
+  return <div className="md-content" dangerouslySetInnerHTML={{__html:`<p>${html}</p>`}}/>;
+}
+
+function useRecorder(){
+  const mediaRef=useRef(null),chunksRef=useRef([]),ctxRef=useRef(null),animRef=useRef(null);
+  const[recording,setRecording]=useState(false);
+  const[audioBlob,setAudioBlob]=useState(null);
+  const[level,setLevel]=useState(0);
+  const[micError,setMicError]=useState(null);
+  const[devices,setDevices]=useState([]);
+  const[deviceId,setDeviceId]=useState("default");
+
+  const loadDevices=useCallback(async()=>{
+    try{
+      await navigator.mediaDevices.getUserMedia({audio:true});
+      const all=await navigator.mediaDevices.enumerateDevices();
+      const mics=all.filter(d=>d.kind==="audioinput");
+      setDevices(mics);
+      if(mics.length)setDeviceId(mics[0].deviceId);
+    }catch(e){setMicError("Microphone access denied — click the lock icon in the address bar and allow microphone access.");}
+  },[]);
+
+  const start=useCallback(async()=>{
+    setMicError(null);setAudioBlob(null);chunksRef.current=[];
+    let stream;
+    try{
+      const constraints={audio:deviceId&&deviceId!=="default"?{deviceId:{exact:deviceId}}:true};
+      stream=await navigator.mediaDevices.getUserMedia(constraints);
+    }catch(err){
+      const msg=err.name==="NotAllowedError"
+        ?"Mic blocked — click the lock icon in the address bar, set Microphone to Allow, then refresh."
+        :err.name==="NotFoundError"?"No microphone found. Plug one in and try again."
+        :`Mic error: ${err.message}`;
+      setMicError(msg);return;
+    }
+    const ctx=new AudioContext();
+    const src=ctx.createMediaStreamSource(stream);
+    const analyser=ctx.createAnalyser();analyser.fftSize=256;
+    src.connect(analyser);ctxRef.current=ctx;
+    const buf=new Uint8Array(analyser.frequencyBinCount);
+    const tick=()=>{analyser.getByteFrequencyData(buf);setLevel(Math.min(buf.reduce((a,b)=>a+b,0)/buf.length/70,1));animRef.current=requestAnimationFrame(tick);};
+    tick();
+    const mime=["audio/webm;codecs=opus","audio/webm","audio/ogg","audio/mp4"].find(m=>MediaRecorder.isTypeSupported(m))||"";
+    const mr=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+    mr.ondataavailable=e=>e.data.size&&chunksRef.current.push(e.data);
+    mr.onstop=()=>{cancelAnimationFrame(animRef.current);setLevel(0);ctx.close();stream.getTracks().forEach(t=>t.stop());setAudioBlob(new Blob(chunksRef.current,{type:mime||"audio/webm"}));};
+    mr.start(200);mediaRef.current=mr;setRecording(true);
+  },[deviceId]);
+
+  const stop=useCallback(()=>{if(mediaRef.current?.state!=="inactive")mediaRef.current?.stop();setRecording(false);},[]);
+  return{recording,audioBlob,level,micError,devices,deviceId,setDeviceId,start,stop,loadDevices};
+}
+
+async function transcribeAudio(blob,apiKey){
+  const form=new FormData();
+  form.append("file",blob,"recording.webm");
+  form.append("model","whisper-1");
+  form.append("language","en");
+  const res=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:`Bearer ${apiKey}`},body:form});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`Whisper error ${res.status}`);}
+  return(await res.json()).text?.trim()||"";
+}
+
+async function callGemini(model,apiKey,sys,usr){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:`${sys}\n\n${usr}`}]}],generationConfig:{maxOutputTokens:1200}})});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`Gemini ${res.status}`);}
+  return(await res.json()).candidates?.[0]?.content?.parts?.[0]?.text||"No response";
+}
+
+async function callCompat(provider,model,apiKey,sys,usr){
+  const base=provider==="Perplexity"?"https://api.perplexity.ai":"https://api.openai.com/v1";
+  const res=await fetch(`${base}/chat/completions`,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${apiKey}`},body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:usr}],max_tokens:1200})});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`API ${res.status}`);}
+  return(await res.json()).choices?.[0]?.message?.content||"No response";
+}
+
+async function getFeedback({transcript,cv,jd,qtype,customQ,provider,model,apiKey}){
+  const qHint=customQ?`Custom question: "${customQ}"`:`Question type: ${qtype}`;
+  const sys="You are an expert interview coach. Give structured, specific, actionable feedback using the STAR framework.";
+  const usr=`## Candidate CV\n${cv||"(not provided)"}\n\n## Job Description\n${jd||"(not provided)"}\n\n## ${qHint}\n\n## Candidate answer\n${transcript}\n\nProvide:\n1. **STAR Score** (x/10) with brief justification\n2. **Strengths** — 2-3 bullets\n3. **Improvements** — 2-3 bullets\n4. **Suggested Reframe** — a concise improved version\n5. **JD Keywords** to weave in next time\n`;
+  if(provider==="Google Gemini")return callGemini(model,apiKey,sys,usr);
+  return callCompat(provider,model,apiKey,sys,usr);
+}
+
+const PROVIDERS={"Google Gemini":["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-2.0-flash"],"OpenAI":["gpt-4o-mini","gpt-4o","gpt-4-turbo"],"Perplexity":["sonar","sonar-pro"]};
+const DEFAULT_CFG={provider:"Google Gemini",model:"gemini-2.5-flash",apiKey:"",openaiKey:""};
+
+function SettingsDrawer({settings,onChange}){
+  const[show,setShow]=useState(false);
+  const models=PROVIDERS[settings.provider]||[];
+  function set(key,val){const n={...settings,[key]:val};if(key==="provider")n.model=(PROVIDERS[val]||[])[0]||"";onChange(n);}
+  return(
+    <>
+      <button onClick={()=>setShow(s=>!s)} style={{background:"var(--panel)",color:"var(--text)",padding:".35rem .8rem",fontSize:".8rem"}}>⚙️ Settings</button>
+      {show&&(
+        <div className="fade-up" style={{position:"fixed",top:54,right:12,zIndex:100,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"1rem",width:320,boxShadow:"0 8px 32px rgba(0,0,0,.6)",display:"flex",flexDirection:"column",gap:".7rem"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontWeight:700,fontSize:".85rem",color:"var(--accent2)"}}>API Settings</span>
+            <button onClick={()=>setShow(false)} style={{background:"none",color:"var(--muted)",padding:".15rem .4rem"}}>✕</button>
+          </div>
+          <div><label>AI Provider</label><select value={settings.provider} onChange={e=>set("provider",e.target.value)}>{Object.keys(PROVIDERS).map(p=><option key={p}>{p}</option>)}</select></div>
+          <div><label>Model</label><select value={settings.model} onChange={e=>set("model",e.target.value)}>{models.map(m=><option key={m}>{m}</option>)}</select></div>
+          {settings.provider!=="OpenAI"&&(
+            <div><label>OpenAI Key <span style={{color:"var(--muted)",fontWeight:400,textTransform:"none",letterSpacing:0}}>(Whisper transcription)</span></label><input type="password" placeholder="sk-…" value={settings.openaiKey||""} onChange={e=>set("openaiKey",e.target.value)}/></div>
+          )}
+          <div><label>{settings.provider} Key <span style={{color:"var(--muted)",fontWeight:400,textTransform:"none",letterSpacing:0}}>(AI feedback)</span></label><input type="password" placeholder={settings.provider==="Google Gemini"?"AIza…":"sk-…"} value={settings.apiKey} onChange={e=>set("apiKey",e.target.value)}/></div>
+          <p style={{fontSize:".72rem",color:"var(--muted)",lineHeight:1.5}}>🔒 Keys stay in this browser tab only — never sent anywhere except directly to the AI provider.</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function DocPanel({label,icon,value,onChange}){
+  const fileRef=useRef();
+  async function handleFile(e){const f=e.target.files[0];if(!f)return;if(f.name.endsWith(".txt"))onChange(await f.text());else alert("Please upload a .txt file, or paste content directly.");fileRef.current.value="";}
+  return(
+    <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"1rem",display:"flex",flexDirection:"column",gap:".5rem"}}>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <span style={{flex:1,fontSize:".82rem",fontWeight:700,color:"var(--accent2)",textTransform:"uppercase",letterSpacing:".06em"}}>{icon} {label}</span>
+        <button style={{background:"var(--panel)",color:"var(--text)",padding:".28rem .6rem",fontSize:".75rem"}} onClick={()=>fileRef.current.click()}>📂 .txt</button>
+        <button style={{background:"var(--panel)",color:"var(--text)",padding:".28rem .6rem",fontSize:".75rem"}} onClick={()=>onChange("")}>🗑</button>
+      </div>
+      <input ref={fileRef} type="file" accept=".txt" hidden onChange={handleFile}/>
+      <textarea rows={9} placeholder={`Paste your ${label} here…`} value={value} onChange={e=>onChange(e.target.value)} style={{fontSize:".82rem"}}/>
+    </div>
+  );
+}
+
+function MicPanel({recording,level,elapsed,micError,devices,deviceId,setDeviceId,onToggle,loadDevices,qtype,onQtype,customQ,onCustomQ,status}){
+  const mins=String(Math.floor(elapsed/60)).padStart(2,"0");
+  const secs=String(elapsed%60).padStart(2,"0");
+  useEffect(()=>{loadDevices();},[]);
+  return(
+    <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"1rem",display:"flex",flexDirection:"column",gap:".75rem"}}>
+      <span style={{fontSize:".82rem",fontWeight:700,color:"var(--accent2)",textTransform:"uppercase",letterSpacing:".06em"}}>🎙 Voice Recording</span>
+      <div>
+        <label>🔊 Microphone Input</label>
+        <select value={deviceId} onChange={e=>setDeviceId(e.target.value)}>
+          <option value="default">Default microphone</option>
+          {devices.map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||`Microphone ${d.deviceId.slice(0,8)}`}</option>)}
+        </select>
+        <p style={{fontSize:".7rem",color:"var(--muted)",marginTop:4,lineHeight:1.5}}>To switch mic: click the lock icon in the address bar → Site settings → Microphone</p>
+      </div>
+      <div>
+        <label>Question Type</label>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:4}}>
+          {["Behavioral","Technical","Situational","Motivation"].map(t=>(
+            <button key={t} onClick={()=>onQtype(t)} style={{borderRadius:20,padding:".26rem .7rem",fontSize:".76rem",fontWeight:600,background:qtype===t?"var(--accent2)":"var(--panel)",color:qtype===t?"#000":"var(--text)"}}>{t}</button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label>Custom Question <span style={{color:"var(--muted)",fontWeight:400,textTransform:"none",letterSpacing:0}}>(optional)</span></label>
+        <input placeholder="e.g. Tell me about a time you led a project…" value={customQ} onChange={e=>onCustomQ(e.target.value)}/>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:".72rem",color:"var(--muted)",minWidth:60}}>Mic level</span>
+        <div style={{flex:1,height:9,background:"var(--panel)",borderRadius:5,overflow:"hidden"}}>
+          <div style={{height:"100%",borderRadius:5,transition:"width .06s linear,background .15s",width:`${level*100}%`,background:level>.8?"var(--danger)":level>.5?"#f0a500":"var(--accent)"}}/>
+        </div>
+        <span style={{fontSize:".72rem",color:"var(--muted)",minWidth:28,textAlign:"right"}}>{Math.round(level*100)}%</span>
+      </div>
+      {micError&&<div style={{background:"rgba(248,81,73,.1)",border:"1px solid rgba(248,81,73,.3)",borderRadius:8,padding:".6rem .8rem",fontSize:".8rem",color:"var(--danger)",lineHeight:1.5}}><strong>🚫 Mic issue:</strong> {micError}</div>}
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontFamily:"var(--font-mono)",fontSize:"1.25rem",color:"var(--accent2)",minWidth:50}}>{mins}:{secs}</span>
+        <span style={{flex:1,fontSize:".78rem",color:"var(--muted)"}}>{status}</span>
+        <button onClick={onToggle} className={recording?"rec-pulse":""} style={{color:"#fff",fontWeight:700,fontSize:".88rem",padding:".55rem 1.1rem",background:recording?"var(--danger)":"var(--accent)"}}>
+          {recording?"⏹ Stop & Analyse":"⏺ Start Recording"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackPanel({entries,onClear}){
+  const endRef=useRef();
+  useEffect(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),[entries]);
+  function copyAll(){
+    const t=entries.filter(e=>e.type!=="info").map(e=>e.type==="transcript"?`YOU SAID:\n${e.text}`:e.type==="feedback"?`AI FEEDBACK:\n${e.text}`:e.text).join("\n\n---\n\n");
+    navigator.clipboard.writeText(t);
+  }
+  return(
+    <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"1rem",display:"flex",flexDirection:"column",minHeight:400}}>
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:".75rem",flexShrink:0}}>
+        <span style={{flex:1,fontSize:".82rem",fontWeight:700,color:"var(--accent2)",textTransform:"uppercase",letterSpacing:".06em"}}>📋 Transcript & Feedback</span>
+        <button style={{background:"var(--panel)",color:"var(--text)",padding:".28rem .6rem",fontSize:".75rem"}} onClick={copyAll}>📋 Copy</button>
+        <button style={{background:"var(--panel)",color:"var(--text)",padding:".28rem .6rem",fontSize:".75rem"}} onClick={onClear}>🗑 Clear</button>
+      </div>
+      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:".85rem"}}>
+        {entries.length===0&&(
+          <div style={{color:"var(--muted)",textAlign:"center",marginTop:"3rem",lineHeight:1.7,fontSize:".875rem"}}>
+            <div style={{fontSize:"2rem",marginBottom:12}}>🎙</div>
+            <p>Record your answer and get instant AI coaching feedback.</p>
+            <p style={{marginTop:6,fontSize:".75rem"}}>Configure your API key in ⚙️ Settings first.</p>
+          </div>
+        )}
+        {entries.map((e,i)=>(
+          <div key={i} className="fade-up">
+            {e.type==="transcript"&&<div style={{borderLeft:"3px solid var(--border)",paddingLeft:".85rem"}}><span style={{display:"inline-block",fontSize:".68rem",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",padding:".12rem .45rem",borderRadius:4,background:"#30363d",color:"#8b949e"}}>🗣 You said</span><p style={{fontSize:".9rem",lineHeight:1.65,fontStyle:"italic",marginTop:6}}>{e.text}</p></div>}
+            {e.type==="feedback"&&<div style={{borderLeft:"3px solid var(--accent2)",paddingLeft:".85rem"}}><span style={{display:"inline-block",fontSize:".68rem",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",padding:".12rem .45rem",borderRadius:4,background:"rgba(88,166,255,.12)",color:"var(--accent2)"}}>🤖 AI Feedback</span><div style={{marginTop:6,fontSize:".875rem"}}><MD>{e.text}</MD></div></div>}
+            {e.type==="info"&&<p style={{fontSize:".78rem",color:"var(--muted)",padding:"0 .5rem"}}>{e.text}</p>}
+            {e.type==="error"&&<div style={{background:"rgba(248,81,73,.1)",border:"1px solid rgba(248,81,73,.3)",borderRadius:8,padding:".55rem .8rem",fontSize:".8rem",color:"var(--danger)"}}><strong>⚠️ Error:</strong> {e.text}</div>}
+          </div>
+        ))}
+        <div ref={endRef}/>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[settings,setSettings]=useState(()=>{try{return JSON.parse(sessionStorage.getItem("cfg"))??DEFAULT_CFG;}catch{return DEFAULT_CFG;}});
+  const[cv,setCV]=useState(()=>{try{return JSON.parse(sessionStorage.getItem("cv"))??"";}catch{return "";}});
+  const[jd,setJD]=useState(()=>{try{return JSON.parse(sessionStorage.getItem("jd"))??"";}catch{return "";}});
+  const[qtype,setQtype]=useState("Behavioral");
+  const[customQ,setCustomQ]=useState("");
+  const[entries,setEntries]=useState([]);
+  const[status,setStatus]=useState("Ready — configure API key in ⚙️ Settings");
+  const[busy,setBusy]=useState(false);
+  const[elapsed,setElapsed]=useState(0);
+  const rec=useRecorder();
+
+  useEffect(()=>sessionStorage.setItem("cfg",JSON.stringify(settings)),[settings]);
+  useEffect(()=>sessionStorage.setItem("cv",JSON.stringify(cv)),[cv]);
+  useEffect(()=>sessionStorage.setItem("jd",JSON.stringify(jd)),[jd]);
+  useEffect(()=>{if(!rec.recording){setElapsed(0);return;}const id=setInterval(()=>setElapsed(e=>e+1),1000);return()=>clearInterval(id);},[rec.recording]);
+  useEffect(()=>{if(!rec.audioBlob)return;processAudio(rec.audioBlob);},[rec.audioBlob]);
+
+  function add(type,text){setEntries(p=>[...p,{type,text}]);}
+
+  async function processAudio(blob){
+    setBusy(true);
+    const whisperKey=settings.provider==="OpenAI"?settings.apiKey:settings.openaiKey;
+    if(!whisperKey){add("error","OpenAI API key needed for Whisper transcription. Add it in ⚙️ Settings.");setBusy(false);setStatus("Missing OpenAI key");return;}
+    if(!settings.apiKey){add("error",`${settings.provider} API key needed for feedback. Add it in ⚙️ Settings.`);setBusy(false);setStatus("Missing API key");return;}
+    setStatus("Transcribing audio…");add("info","⏳ Sending to Whisper…");
+    let transcript;
+    try{
+      transcript=await transcribeAudio(blob,whisperKey);
+      setEntries(p=>p.filter(e=>!(e.type==="info"&&e.text.includes("Whisper"))));
+      if(!transcript)throw new Error("No speech detected.");
+      add("transcript",transcript);
+    }catch(err){
+      setEntries(p=>p.filter(e=>!(e.type==="info"&&e.text.includes("Whisper"))));
+      add("error",`Transcription failed: ${err.message}`);setBusy(false);setStatus("Error");return;
+    }
+    setStatus("Getting AI feedback…");add("info","⏳ Asking AI coach…");
+    try{
+      const feedback=await getFeedback({transcript,cv,jd,qtype,customQ,provider:settings.provider,model:settings.model,apiKey:settings.apiKey});
+      setEntries(p=>{const f=p.filter(e=>!(e.type==="info"&&e.text.includes("AI coach")));return[...f,{type:"feedback",text:feedback}];});
+      setStatus("Done ✓ — record again to practice more");
+    }catch(err){
+      setEntries(p=>p.filter(e=>!(e.type==="info"&&e.text.includes("AI coach"))));
+      add("error",`AI feedback failed: ${err.message}`);setStatus("Error");
+    }finally{setBusy(false);}
+  }
+
+  function toggleRec(){if(rec.recording){rec.stop();setStatus("Processing…");}else{rec.start();setStatus("Recording…");}}
+
+  return(
+    <div style={{minHeight:"100dvh",display:"flex",flexDirection:"column"}}>
+      <header style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:".7rem 1.25rem",background:"var(--surface)",borderBottom:"1px solid var(--border)",position:"sticky",top:0,zIndex:50}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:"1.25rem"}}>🎤</span>
+          <span style={{fontWeight:700,fontSize:"1rem",color:"var(--accent2)"}}>Interview Prep Assistant</span>
+          {busy&&<span className="spin" style={{fontSize:"1rem",color:"var(--muted)",marginLeft:8}}>⟳</span>}
+        </div>
+        <div style={{position:"relative"}}><SettingsDrawer settings={settings} onChange={setSettings}/></div>
+      </header>
+      <main className="main-grid" style={{flex:1,display:"grid",gridTemplateColumns:"360px 1fr",gap:"1rem",padding:"1rem 1.25rem",alignItems:"start"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:".75rem"}}>
+          <DocPanel label="CV / Resume" icon="📄" value={cv} onChange={setCV}/>
+          <DocPanel label="Job Description" icon="💼" value={jd} onChange={setJD}/>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:".75rem"}}>
+          <MicPanel recording={rec.recording} level={rec.level} elapsed={elapsed} micError={rec.micError} devices={rec.devices} deviceId={rec.deviceId} setDeviceId={rec.setDeviceId} onToggle={toggleRec} loadDevices={rec.loadDevices} qtype={qtype} onQtype={setQtype} customQ={customQ} onCustomQ={setCustomQ} status={status}/>
+          <FeedbackPanel entries={entries} onClear={()=>setEntries([])}/>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
 </html>
