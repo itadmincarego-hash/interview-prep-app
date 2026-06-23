@@ -1,73 +1,72 @@
-# Interview Prep App 🎤
+# Interview Prep App — Web Version 🎤
 
-AI-powered desktop interview coach built with Python + Tkinter.
-
-Record your spoken answers, get instant AI coaching feedback based on your CV and the job description.
-
----
-
-## Features
-
-- 🎙️ Voice recording via `sounddevice`
-- 📝 Speech-to-text via OpenAI Whisper (runs locally)
-- 🤖 AI coaching via OpenAI GPT, Google Gemini, or Perplexity
-- 📄 Upload CV and Job Description (paste text, PDF, or DOCX)
-- 📊 STAR method scoring out of 10
-- 💾 Session save/load
-- 🪟 Windows-ready — builds to `.exe` via PyInstaller
+Full-stack web app: React frontend + Flask/Whisper backend.
+Record your interview answer in the browser → AI coaching feedback instantly.
 
 ---
 
-## Quick Start
+## Architecture
 
-```bat
-git clone https://github.com/itadmincarego-hash/interview-prep-app.git
-cd interview-prep-app
+```
+browser (React + Vite)
+    │  POST /api/transcribe  (audio blob)
+    │  POST /api/feedback    (transcript + CV + JD)
+    ▼
+Flask server (Python)
+    ├── Whisper  → speech-to-text (runs locally on server)
+    └── OpenAI / Gemini / Perplexity → coaching feedback
 ```
 
-**Option A — One-click setup (recommended)**
-```bat
-installer\install.bat
-```
+---
 
-**Option B — Manual**
-```bat
+## Local Development
+
+### 1 — Backend
+
+```bash
+cd backend
 python -m venv venv
-venv\Scripts\activate
+venv/Scripts/activate          # Windows
+# source venv/bin/activate     # Mac/Linux
 pip install -r requirements.txt
-python interview_prep_assistant_revised.py
+python app.py
+# → running on http://localhost:5000
 ```
+
+### 2 — Frontend (new terminal)
+
+```bash
+cd frontend
+npm install
+npm run dev
+# → running on http://localhost:5173
+```
+
+The Vite proxy in `vite.config.js` forwards `/api/*` to Flask automatically.
 
 ---
 
-## Daily Launch (after setup)
+## Deploy to Railway (free)
 
-```bat
-installer\launch.bat
-```
+### Backend
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select this repo, set **Root Directory** to `backend`
+3. Railway auto-detects the `Procfile` and deploys Flask
+4. Copy the Railway URL e.g. `https://interview-prep-backend.up.railway.app`
 
----
-
-## API Keys Needed
-
-At least one of:
-- [OpenAI](https://platform.openai.com/api-keys)
-- [Google Gemini](https://aistudio.google.com/app/apikey)
-- [Perplexity](https://www.perplexity.ai/settings/api)
-
-Enter the key in the **Settings** panel inside the app.
+### Frontend
+1. New Service → GitHub → set Root Directory to `frontend`
+2. Add environment variable: `VITE_API_URL=https://your-backend-url.up.railway.app`
+3. Build command: `npm run build` | Output: `dist`
 
 ---
 
-## Build Windows .exe
+## Environment Variables
 
-```bat
-venv\Scripts\activate
-pip install pyinstaller
-pyinstaller --clean --noconfirm --onedir --windowed --name InterviewPrep --hidden-import=whisper --hidden-import=google.genai interview_prep_assistant_revised.py
-```
-
-Output: `dist\InterviewPrep\InterviewPrep.exe`
+| Variable | Where | Purpose |
+|---|---|---|
+| `VITE_API_URL` | frontend `.env` | Points frontend to backend URL |
+| `PORT` | backend | Auto-set by Railway/Render |
 
 ---
 
@@ -75,24 +74,22 @@ Output: `dist\InterviewPrep\InterviewPrep.exe`
 
 ```
 interview-prep-app/
-├── interview_prep_assistant_revised.py   ← Main app
-├── requirements.txt
-├── installer/
-│   ├── install.bat                        ← One-click first-time setup
-│   ├── launch.bat                         ← Daily launcher
-│   └── InterviewPrep.iss                  ← Inno Setup script
+├── backend/
+│   ├── app.py              ← Flask API (transcribe + feedback)
+│   ├── requirements.txt
+│   └── Procfile            ← gunicorn start command
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx         ← Main layout + state
+│   │   ├── components/
+│   │   │   ├── SettingsPanel.jsx
+│   │   │   ├── DocumentPanel.jsx
+│   │   │   ├── RecorderPanel.jsx
+│   │   │   └── FeedbackPanel.jsx
+│   │   └── hooks/
+│   │       └── useRecorder.js
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 └── README.md
 ```
-
----
-
-## Roadmap
-
-- [ ] Inno Setup Windows installer (auto-installs Python + packages)
-- [ ] Faster startup with onedir build
-- [ ] Question bank per role type
-- [ ] Export feedback to PDF report
-
----
-
-Built by [CareGo](https://github.com/itadmincarego-hash)

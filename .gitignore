@@ -1,41 +1,12 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg
-*.egg-info/
+node_modules/
 dist/
 build/
-.eggs/
-
-# Virtual environments
 venv/
 env/
-.venv/
-.env/
-
-# PyInstaller
-*.spec
-dist/
-build/
-
-# App output
-InterviewPrepOutput/
-Save data/
-debug_log.txt
+__pycache__/
+*.py[cod]
 *.log
-
-# OS
+.env
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# IDE
-.vscode/
-.idea/
-
-# Secrets
-*.env
-config.ini
+*.egg-info/
