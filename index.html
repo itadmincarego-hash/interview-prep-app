@@ -104,13 +104,13 @@ select{cursor:pointer}
 
 /* ── MIC METER ───────────────────────────────────────── */
 .meter-wrap{display:flex;align-items:center;gap:8px}
-.meter-label{font-size:.7rem;color:var(--muted);min-width:58px}
-.meter-track{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.meter-label{font-size:.7rem;color:var(--muted);min-width:52px}
+.meter-track{flex:1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
 .meter-fill{height:100%;border-radius:3px;transition:width .05s linear,background .15s;width:0}
 .meter-pct{font-size:.7rem;color:var(--muted);min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
 
 /* ── WAVEFORM ANIMATION ──────────────────────────────── */
-.waveform{display:flex;align-items:center;gap:3px;height:28px}
+.waveform{display:flex;align-items:center;gap:3px;height:22px}
 .wv-bar{width:3px;border-radius:2px;background:var(--red);transform-origin:center;transition:background .15s}
 @keyframes wave1{0%,100%{transform:scaleY(.2)}50%{transform:scaleY(1)}}
 @keyframes wave2{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(.15)}}
@@ -126,13 +126,12 @@ select{cursor:pointer}
 .recording .wv-bar:nth-child(7){animation:wave3 .95s ease-in-out infinite .08s}
 
 /* ── TIMER ───────────────────────────────────────────── */
-.timer-block{display:flex;align-items:center;gap:10px;padding:.6rem .9rem;background:var(--panel);border-radius:var(--radius-sm);border:1px solid var(--border)}
-.timer-val{font-family:var(--mono);font-size:1.3rem;color:var(--blue);min-width:52px;font-variant-numeric:tabular-nums;transition:color var(--transition)}
+.timer-block{display:flex;align-items:center;gap:10px;padding:.5rem .75rem;background:var(--panel);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.timer-val{font-family:var(--mono);font-size:1.1rem;color:var(--blue);min-width:46px;font-variant-numeric:tabular-nums;transition:color var(--transition)}
 .timer-val.running{color:var(--red)}
-.timer-label{font-size:.75rem;color:var(--muted);flex:1}
+.timer-label{font-size:.73rem;color:var(--muted);flex:1}
 
 /* ── STATUS BAR ──────────────────────────────────────── */
-.status-bar{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;background:var(--panel);border-radius:var(--radius-sm);border:1px solid var(--border);font-size:.78rem;color:var(--muted);min-height:36px}
 .status-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0;transition:all var(--transition)}
 .status-dot.active{background:var(--accent)}
 .status-dot.recording{background:var(--red);animation:pulse-dot 1s ease-in-out infinite}
@@ -140,7 +139,7 @@ select{cursor:pointer}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── PROCESSING STEPS ────────────────────────────────── */
-.proc-steps{display:flex;flex-direction:column;gap:6px;padding:.6rem .75rem;background:var(--panel);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.proc-steps{display:flex;flex-direction:column;gap:6px}
 .proc-step{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--faint);transition:color var(--transition)}
 .proc-step.done{color:var(--accent)}
 .proc-step.active{color:var(--text)}
@@ -191,6 +190,11 @@ select{cursor:pointer}
 .sdrawer-title{font-size:.82rem;font-weight:700;color:var(--blue)}
 .sdrawer p{font-size:.7rem;color:var(--muted);line-height:1.55}
 
+/* ── MIC PANEL (inline in question card) ─────────────── */
+.mic-panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.7rem .85rem;display:flex;flex-direction:column;gap:.6rem}
+.mic-panel-head{display:flex;align-items:center;gap:8px}
+.mic-panel-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;flex:1}
+
 /* ── ANIMATIONS ──────────────────────────────────────── */
 @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .fu{animation:slideIn .25s cubic-bezier(.16,1,.3,1) both}
@@ -200,6 +204,10 @@ select{cursor:pointer}
 .hide{display:none!important}
 .row{display:flex;align-items:center;gap:8px}
 .flex1{flex:1}
+
+/* ── TWO-COLUMN QUESTION CARD BODY ───────────────────── */
+.qcard-body{display:grid;grid-template-columns:1fr 260px;gap:.85rem;align-items:start}
+@media(max-width:900px){.qcard-body{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -290,12 +298,14 @@ select{cursor:pointer}
       </div>
     </div>
 
-    <!-- QUESTION CARD -->
+    <!-- QUESTION + MIC CARD (combined) -->
     <div class="card" id="qCard">
       <div class="card-head">
         <span class="section-title flex1">Interview Question</span>
         <button class="btn-icon" id="newQBtn" title="New question" aria-label="Generate new question" style="font-size:.85rem">↻</button>
       </div>
+
+      <!-- Question type pills -->
       <div>
         <label class="label">Question Type</label>
         <div class="row" style="flex-wrap:wrap;gap:6px" id="pills">
@@ -305,51 +315,71 @@ select{cursor:pointer}
           <button class="pill" data-q="Motivation">Motivation</button>
         </div>
       </div>
-      <div>
-        <label class="label">Generated Question</label>
-        <div class="qbox empty-q" id="qDisplay">Click "Generate" to get a tailored question...</div>
-      </div>
-      <button id="genQBtn" class="btn btn-blue" style="align-self:flex-start">⚡ Generate Question</button>
-    </div>
 
-    <!-- RECORD CARD -->
-    <div class="card" id="recCard">
-      <div class="card-head">
-        <span class="section-title flex1">Record Your Answer</span>
-        <div class="waveform" id="waveform">
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
-          <div class="wv-bar" style="height:20px"></div>
+      <!-- Two-column body: question left, mic right -->
+      <div class="qcard-body">
+
+        <!-- LEFT: question text -->
+        <div style="display:flex;flex-direction:column;gap:.7rem">
+          <div>
+            <label class="label">Question</label>
+            <div class="qbox empty-q" id="qDisplay">Click "Generate Question" to begin...</div>
+          </div>
+          <div class="row">
+            <button id="genQBtn" class="btn btn-blue">⚡ Generate Question</button>
+            <span id="recHint" class="tag tag-gray hide">tip: speak clearly</span>
+          </div>
         </div>
-      </div>
-      <div>
-        <label class="label">Microphone</label>
-        <select id="micSel"><option value="default">Default microphone</option></select>
-      </div>
-      <div class="meter-wrap">
-        <span class="meter-label">Mic level</span>
-        <div class="meter-track"><div class="meter-fill" id="mfill"></div></div>
-        <span class="meter-pct" id="mpct">0%</span>
-      </div>
-      <div id="merr" class="ebox hide"></div>
-      <div class="timer-block">
-        <span class="timer-val" id="tmr">00:00</span>
-        <span class="timer-label" id="stxt">Generate a question, then start recording</span>
-        <div id="procSteps" class="hide" style="display:none;flex-direction:column;gap:4px">
-          <div class="proc-step" id="ps1"><span class="proc-icon">○</span> Transcribing audio</div>
-          <div class="proc-step" id="ps2"><span class="proc-icon">○</span> Analysing answer</div>
+
+        <!-- RIGHT: mic panel -->
+        <div class="mic-panel">
+          <div class="mic-panel-head">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <span class="mic-panel-title">Record Your Answer</span>
+            <div class="waveform" id="waveform">
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+              <div class="wv-bar" style="height:18px"></div>
+            </div>
+          </div>
+
+          <!-- Mic level bar -->
+          <div class="meter-wrap">
+            <span class="meter-label">Mic level</span>
+            <div class="meter-track"><div class="meter-fill" id="mfill"></div></div>
+            <span class="meter-pct" id="mpct">0%</span>
+          </div>
+
+          <!-- Microphone dropdown -->
+          <div>
+            <label class="label" style="margin-bottom:.3rem">Microphone</label>
+            <select id="micSel"><option value="default">Default microphone</option></select>
+          </div>
+
+          <!-- Error -->
+          <div id="merr" class="ebox hide"></div>
+
+          <!-- Timer / status -->
+          <div class="timer-block">
+            <div class="status-dot" id="sDot"></div>
+            <span class="timer-val" id="tmr">00:00</span>
+            <span class="timer-label" id="stxt">Generate a question first</span>
+            <div id="procSteps" class="hide proc-steps">
+              <div class="proc-step" id="ps1"><span class="proc-icon">○</span> Transcribing</div>
+              <div class="proc-step" id="ps2"><span class="proc-icon">○</span> Analysing</div>
+            </div>
+          </div>
+
+          <!-- Record button -->
+          <button id="recBtn" class="btn btn-primary" style="width:100%;justify-content:center">▶ Start Recording</button>
         </div>
-      </div>
-      <div class="row">
-        <button id="recBtn" class="btn btn-primary">▶ Start Recording</button>
-        <div style="flex:1"></div>
-        <span id="recHint" class="tag tag-gray hide">tip: speak clearly</span>
-      </div>
-    </div>
+
+      </div><!-- /qcard-body -->
+    </div><!-- /qCard -->
 
     <!-- FEEDBACK CARD -->
     <div class="card" id="fbCard">
@@ -436,11 +466,8 @@ function setStep(n,state){
 function showMicErr(m){G('merr').innerHTML='<strong>🚫</strong> '+m;G('merr').classList.remove('hide');}
 function hideMicErr(){G('merr').classList.add('hide');}
 function setMeter(p){G('mfill').style.width=p+'%';G('mfill').style.background=p>80?'var(--red)':p>50?'var(--amber)':'var(--accent)';G('mpct').textContent=Math.round(p)+'%';}
-function setStatus(m){G('stxt').textContent=m;G('stxt').classList.remove('hide');G('procSteps').style.display='none';}
-function setStatusDot(mode){
-  const d=document.querySelector('.status-dot');
-  if(d){d.classList.remove('active','recording','busy');if(mode)d.classList.add(mode);}
-}
+function setStatus(m){G('stxt').textContent=m;G('stxt').classList.remove('hide');G('procSteps').classList.add('hide');}
+function setStatusDot(mode){const d=G('sDot');if(d){d.classList.remove('active','recording','busy');if(mode)d.classList.add(mode);}}
 function setBusy(b){
   S.busy=b;
   G('globalSpin').classList.toggle('hide',!b);
@@ -453,7 +480,7 @@ function stopTimer(){clearInterval(tickId);G('tmr').textContent='00:00';G('tmr')
 
 function showProcSteps(){
   G('stxt').classList.add('hide');
-  const p=G('procSteps');p.style.display='flex';
+  const p=G('procSteps');p.classList.remove('hide');
   [G('ps1'),G('ps2')].forEach(el=>{el.classList.remove('done','active');el.querySelector('.proc-icon').textContent='○';});
 }
 function setProcStep(n,state){
@@ -468,7 +495,7 @@ async function generateQuestion(){
   const cv=G('cvTxt').value.trim(), jd=G('jdTxt').value.trim();
   if(!cv&&!jd){addEntry('err','Paste your CV and/or Job Description first.');return;}
   if(!S.ak){addEntry('err',S.prov+' API key needed — add it in Settings.');return;}
-  setBusy(true);setStatus('Generating question...');
+  setBusy(true);setStatus('Generating question...');setStatusDot('busy');
   G('qDisplay').textContent='Thinking...';G('qDisplay').className='qbox empty-q';
   const sys='You are a senior recruiter. Generate ONE '+S.qt.toLowerCase()+' interview question tailored to this candidate. Output ONLY the question, no preamble, no quotation marks.';
   const usr='CV:\n'+cv.slice(0,2500)+'\n\nJob Description:\n'+jd.slice(0,2500);
@@ -477,14 +504,14 @@ async function generateQuestion(){
     S.question=q.trim();
     G('qDisplay').textContent=S.question;
     G('qDisplay').className='qbox has-q fu';
-    setStatus('Question ready — press Record when you\'re set');
+    setStatus('Ready — press Record');setStatusDot('active');
     G('recHint').classList.remove('hide');
     updateSteps();
   }catch(e){
     addEntry('err','Question generation failed: '+e.message);
-    G('qDisplay').textContent='Click "Generate" to get a tailored question...';
+    G('qDisplay').textContent='Click "Generate Question" to begin...';
     G('qDisplay').className='qbox empty-q';
-    setStatus('Error — try again');
+    setStatus('Error — try again');setStatusDot('');
   }finally{setBusy(false);}
 }
 G('genQBtn').onclick=generateQuestion;
@@ -515,17 +542,21 @@ async function startRec(){
   MR.start(200);S.rec=true;startTimer();
   G('recBtn').innerHTML='⏹ Stop &amp; Analyse';
   G('recBtn').className='btn btn-danger';
+  G('recBtn').style.width='100%';
+  G('recBtn').style.justifyContent='center';
   G('waveform').classList.add('recording');
-  setStatus('Recording... speak your answer');
+  setStatus('Recording...');setStatusDot('recording');
 }
 function stopRec(){
   if(MR&&MR.state!=='inactive')MR.stop();
   S.rec=false;stopTimer();
   G('recBtn').innerHTML='▶ Start Recording';
   G('recBtn').className='btn btn-primary';
+  G('recBtn').style.width='100%';
+  G('recBtn').style.justifyContent='center';
   G('waveform').classList.remove('recording');
   G('recHint').classList.add('hide');
-  setStatus('Processing...');
+  setStatus('Processing...');setStatusDot('busy');
 }
 G('recBtn').onclick=()=>S.rec?stopRec():startRec();
 
@@ -554,7 +585,6 @@ function addEntry(type,text){
   G('feed').appendChild(d);
   G('feed').scrollTop=G('feed').scrollHeight;
 }
-function rmInfo(k){G('feed').querySelectorAll('[data-info]').forEach(el=>{if(el.dataset.info.includes(k))el.remove();});}
 G('clrBtn').onclick=()=>{S.log=[];S.attempts=0;G('feed').innerHTML='';G('feed').appendChild(G('feedEmpty'));G('feedEmpty').classList.remove('hide');G('sessionBadge').classList.add('hide');updateSteps();};
 G('cpyBtn').onclick=()=>navigator.clipboard.writeText(S.log.filter(e=>e.type!=='info').map(e=>e.type==='tx'?'YOU SAID:\n'+e.text:e.type==='fb'?'AI FEEDBACK:\n'+e.text:e.type==='q'?'QUESTION:\n'+e.text:e.text).join('\n\n---\n\n')).catch(()=>{});
 
@@ -585,7 +615,7 @@ function renderFb(p){
   if(p.score){
     const [color,val]=scoreColorClass(p.score);
     const num=parseFloat(val)||0;
-    const circ=2*Math.PI*26; // r=26
+    const circ=2*Math.PI*26;
     const offset=circ-(num/100)*circ;
     const verdict=num>=70?'Strong answer':num>=40?'Decent start':'Needs work';
     const verdictColor=num>=70?'var(--accent)':num>=40?'var(--amber)':'var(--red)';
@@ -656,8 +686,8 @@ async function processAudio(blob){
   setBusy(true);
   addEntry('q',S.question);
   const wk=S.prov==='OpenAI'?S.ak:S.oak;
-  if(!wk){addEntry('err','OpenAI key needed for transcription — add it in Settings.');setBusy(false);setStatus('Missing key');return;}
-  if(!S.ak){addEntry('err',S.prov+' key needed for AI feedback — add it in Settings.');setBusy(false);setStatus('Missing key');return;}
+  if(!wk){addEntry('err','OpenAI key needed for transcription — add it in Settings.');setBusy(false);setStatus('Missing key');setStatusDot('');return;}
+  if(!S.ak){addEntry('err',S.prov+' key needed for AI feedback — add it in Settings.');setBusy(false);setStatus('Missing key');setStatusDot('');return;}
   showProcSteps();
   setProcStep(1,'active');
   let tx;
@@ -669,7 +699,7 @@ async function processAudio(blob){
   }catch(e){
     setProcStep(1,'');
     addEntry('err','Transcription failed: '+e.message);
-    setBusy(false);setStatus('Error — try again');
+    setBusy(false);setStatus('Error — try again');setStatusDot('');
     return;
   }
   setProcStep(2,'active');
@@ -680,15 +710,15 @@ async function processAudio(blob){
     S.attempts++;
     G('sessionBadge').textContent=S.attempts+' attempt'+(S.attempts!==1?'s':'');
     G('sessionBadge').classList.remove('hide');
-    setStatus('Done — record again to keep practising ✓');
+    setStatus('Done ✓ — record again');setStatusDot('active');
     updateSteps();
   }catch(e){
     setProcStep(2,'');
     addEntry('err','AI feedback failed: '+e.message);
-    setStatus('Error — try again');
+    setStatus('Error — try again');setStatusDot('');
   }finally{
     setBusy(false);
-    setTimeout(()=>{G('procSteps').style.display='none';G('stxt').classList.remove('hide');},1200);
+    setTimeout(()=>{G('procSteps').classList.add('hide');G('stxt').classList.remove('hide');},1500);
   }
 }
 </script>
