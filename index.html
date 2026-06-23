@@ -4,930 +4,1112 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Interview Prep Assistant</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{
-  --bg:#0d1117;--surface:#161b22;--panel:#21262d;--border:#30363d;
-  --accent:#2ea043;--accent-h:#3fb950;--accent2:#58a6ff;--accent2-h:#79b8ff;
-  --danger:#f85149;--warning:#f0a500;
-  --text:#e6edf3;--muted:#8b949e;--faint:#484f58;
-  --radius:8px;--radius-lg:12px;
-  --font:"Inter",system-ui,sans-serif;
-  --font-mono:"JetBrains Mono",monospace;
-  --shadow:0 4px 16px rgba(0,0,0,.5);
-}
+/* ── Reset & Base ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100dvh;-webkit-font-smoothing:antialiased;font-size:13px}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-button{cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:500;border:none;border-radius:var(--radius);padding:.4rem .85rem;transition:opacity .15s,background .15s,transform .1s,box-shadow .15s;white-space:nowrap}
-button:active:not(:disabled){transform:scale(.97)}
-button:disabled{opacity:.35;cursor:not-allowed}
-textarea,input,select{font-family:var(--font);font-size:.8rem;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:.45rem .7rem;outline:none;width:100%;transition:border-color .15s}
-textarea:focus,input:focus,select:focus{border-color:var(--accent2)}
-textarea{resize:vertical;line-height:1.6}
-.lbl{display:block;font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem}
+html{font-size:14px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;height:100vh}
 
-/* ─── TOP HEADER ──────────────────────────────────────── */
-#topbar{
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:.55rem 1rem;
-  display:flex;align-items:center;gap:1rem;
-  flex-wrap:wrap;
-  flex-shrink:0;
-}
-#topbar .app-brand{
-  display:flex;align-items:center;gap:8px;
-  font-weight:700;font-size:.95rem;color:var(--accent2);
-  white-space:nowrap;margin-right:.5rem;
-}
-.hgroup{display:flex;flex-direction:column;gap:.28rem}
-.hgroup .lbl{margin-bottom:0}
-.hgroup-row{display:flex;align-items:center;gap:.5rem}
-.sep{width:1px;height:44px;background:var(--border);flex-shrink:0}
-
-/* folder input */
-#folderInput{width:160px}
-
-/* status pill */
-#statusPill{
-  display:flex;align-items:center;gap:6px;
-  padding:.38rem .85rem;border-radius:20px;
-  font-size:.75rem;font-weight:700;letter-spacing:.04em;
-  background:rgba(248,81,73,.12);color:var(--danger);border:1px solid rgba(248,81,73,.3);
-  white-space:nowrap;
-}
-#statusPill.ready{background:rgba(46,160,67,.12);color:var(--accent);border-color:rgba(46,160,67,.3)}
-#statusPill .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-
-/* go ready */
-#goReadyBtn{
-  background:var(--accent2);color:#000;
-  font-size:.85rem;font-weight:700;
-  padding:.5rem 1.3rem;
-  border-radius:var(--radius);
-  box-shadow:0 0 0 0 rgba(88,166,255,.4);
-}
-#goReadyBtn:hover:not(:disabled){background:var(--accent2-h);box-shadow:0 0 0 4px rgba(88,166,255,.2)}
-#goReadyBtn.active{background:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(46,160,67,.2)}
-
-/* mic meter */
-.meter-track{flex:1;min-width:80px;height:8px;background:var(--panel);border-radius:4px;overflow:hidden}
-.meter-fill{height:100%;border-radius:4px;transition:width .06s linear,background .15s;width:0%;background:var(--accent)}
-
-/* ─── MAIN BODY ───────────────────────────────────────── */
-#main{
-  flex:1;display:flex;flex-direction:column;overflow:hidden;
-  padding:.75rem;
-  gap:.75rem;
+/* ── Colour tokens (match Python C dict) ── */
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;
+  --accent:#238636;--accent-h:#2ea043;--blue:#1f6feb;
+  --teal:#4f98a3;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;
+  --ok:#3fb950;--warn:#d29922;--err:#f85149;--border:#30363d;
+  --card:#161b22;--inp:#0d1117;--rec:#da3633;
+  --sh:#3fb950;--sm:#d29922;--sl:#f85149;--up:#1f3a5f;--pb:#1a2332;
+  --radius:6px;--radius-sm:4px;
 }
 
-/* ─── 2-COL WORKFLOW ─────────────────────────────────── */
-#workflow{
-  display:grid;
-  grid-template-columns:340px 1fr;
-  gap:.75rem;
-  flex:1;
-  overflow:hidden;
-  min-height:0;
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 
-.col{display:flex;flex-direction:column;gap:.75rem;overflow:hidden;min-height:0}
+/* ── Typography ── */
+.label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.teal{color:var(--teal)}
+.ok{color:var(--ok)}
+.warn{color:var(--warn)}
+.err{color:var(--err)}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
 
-/* ─── CARD ──────────────────────────────────────────── */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:.85rem;
-  display:flex;flex-direction:column;gap:.65rem;
-  flex-shrink:0;
-}
-.card.flex-fill{flex:1;overflow:hidden;min-height:0}
-.card-head{display:flex;align-items:center;gap:8px}
-.card-title{flex:1;font-size:.78rem;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.07em}
-.btn-ghost{background:var(--panel);color:var(--muted);padding:.3rem .65rem;font-size:.75rem}
-.btn-ghost:hover:not(:disabled){background:var(--border);color:var(--text)}
-.btn-primary{background:var(--accent);color:#fff;font-weight:700}
-.btn-primary:hover:not(:disabled){background:var(--accent-h)}
-.btn-danger{background:var(--danger);color:#fff;font-weight:700}
-.row{display:flex;align-items:center;gap:8px}
+/* ── Layout shell ── */
+#header{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#header h1{font-size:15px;font-weight:700;color:var(--teal);letter-spacing:.2px}
+#header .backend-badge{font-size:9px;padding:2px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
 
-/* textarea fill */
-.ta-fill{flex:1;min-height:0;resize:none;font-size:.8rem}
-.card-scroll{flex:1;overflow-y:auto;min-height:0}
+/* ── Setup Panel ── */
+#setup{background:var(--pb);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0}
+.setup-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:3px 0}
+.setup-row+.setup-row{margin-top:6px}
 
-/* ─── QUESTION PILL BUTTONS ─────────────────────────── */
-#qtypePills{display:flex;gap:6px;flex-wrap:wrap}
-.qpill{
-  border-radius:20px;padding:.3rem .8rem;font-size:.76rem;font-weight:600;
-  background:var(--panel);color:var(--muted);border:1px solid var(--border);
+/* ── Form controls ── */
+select,input[type=text],input[type=password]{
+  background:var(--inp);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius-sm);padding:4px 8px;font-size:12px;font-family:inherit;
+  outline:none;transition:border-color .15s
 }
-.qpill.active{background:var(--accent2);color:#000;border-color:var(--accent2)}
+select:focus,input:focus{border-color:var(--teal)}
+select{cursor:pointer}
+.inp-key{width:320px;font-family:'Consolas',monospace}
+.inp-model{width:180px}
+.inp-dir{width:280px;font-family:'Consolas',monospace}
+.inp-url{width:220px}
 
-/* score ring */
-.score-ring-wrap{display:flex;align-items:center;gap:12px}
-.score-ring-label{font-size:1.5rem;font-weight:700;font-family:var(--font-mono)}
+/* ── Buttons ── */
+button{font-family:inherit;font-size:12px;border:none;border-radius:var(--radius-sm);cursor:pointer;padding:5px 12px;transition:opacity .15s,background .15s}
+button:disabled{opacity:.4;cursor:default}
+button:not(:disabled):hover{opacity:.85}
+.btn-blue{background:var(--blue);color:#fff;font-weight:700}
+.btn-green{background:var(--accent);color:#fff;font-weight:700;padding:6px 14px}
+.btn-red{background:var(--rec);color:#fff;font-weight:700;padding:6px 14px}
+.btn-dim{background:var(--surface2);color:var(--text)}
+.btn-teal{background:var(--surface2);color:var(--teal)}
+.btn-up{background:var(--up);color:var(--text)}
+.btn-warn{background:var(--surface2);color:var(--warn)}
+.btn-go{background:var(--blue);color:#fff;font-weight:700;padding:6px 16px;font-size:13px}
+.btn-icon{background:none;color:var(--teal);padding:3px 7px;font-size:13px}
 
-/* recording card */
-#recCard{
-  border:1px solid var(--border);
-}
-#recCard.recording-active{
-  border-color:rgba(248,81,73,.5);
-  box-shadow:0 0 0 2px rgba(248,81,73,.15);
-}
-.timer{font-family:var(--font-mono);font-size:1.4rem;font-weight:500;color:var(--accent2);min-width:60px}
+/* ── Status badge ── */
+#lbl-ready{font-size:12px;font-weight:700;padding:4px 12px;border-radius:12px}
+#lbl-ready.not-ready{background:rgba(248,81,73,.12);color:var(--err);border:1px solid rgba(248,81,73,.3)}
+#lbl-ready.ready{background:rgba(63,185,80,.12);color:var(--ok);border:1px solid rgba(63,185,80,.3)}
 
-/* waveform bars */
-#waveform{display:flex;align-items:center;gap:3px;height:28px}
-.wbar{
-  width:4px;border-radius:2px;
-  background:var(--accent2);
-  height:4px;
-  transition:height .06s ease;
-}
-@keyframes wave{
-  0%,100%{height:4px}50%{height:22px}
-}
-.wbar.active{animation:wave 0.9s ease-in-out infinite}
-.wbar:nth-child(1).active{animation-delay:0s}
-.wbar:nth-child(2).active{animation-delay:.1s}
-.wbar:nth-child(3).active{animation-delay:.2s}
-.wbar:nth-child(4).active{animation-delay:.3s}
-.wbar:nth-child(5).active{animation-delay:.2s}
-.wbar:nth-child(6).active{animation-delay:.1s}
-.wbar:nth-child(7).active{animation-delay:0s}
+/* ── Main columns ── */
+#main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;min-height:0}
+.col{display:flex;flex-direction:column;padding:12px 14px;overflow:hidden;gap:8px}
+.col-left{border-right:1px solid var(--border)}
 
-/* ─── FEEDBACK / PROGRESS STRIP ────────────────────── */
-#feedbackSection{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  min-height:0;
-}
+/* ── Section labels ── */
+.sec-title{font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px}
 
-/* Progress area */
-#progressArea{
-  padding:.7rem 1rem;
-  border-bottom:1px solid var(--border);
-  display:flex;flex-direction:column;gap:.5rem;
-}
-#progressArea .prog-top{
-  display:flex;align-items:center;justify-content:space-between;
-}
-#progressLabel{font-size:.72rem;font-weight:600;color:var(--muted)}
-#progressPct{font-size:.78rem;font-weight:700;color:var(--accent);font-family:var(--font-mono)}
-.prog-track{height:10px;background:var(--panel);border-radius:5px;overflow:hidden}
-.prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s cubic-bezier(.4,0,.2,1)}
-#currentStageText{font-size:.78rem;color:var(--accent2);font-style:italic}
+/* ── Text panels (CV / JD) ── */
+.doc-panel{display:flex;flex-direction:column;flex:1;min-height:0}
+.doc-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0}
+.doc-filename{font-size:11px;color:var(--ok);margin-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-textarea{flex:1;min-height:0;background:var(--inp);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;font-family:'Segoe UI',sans-serif;resize:none;line-height:1.5;outline:none;transition:border-color .15s}
+.doc-textarea:focus{border-color:var(--teal)}
+.doc-textarea.placeholder-active{color:var(--faint);font-style:italic}
+.doc-textarea:disabled{background:var(--surface2)}
 
-/* checklist + tabs side-by-side */
-#feedBody{
-  display:flex;flex:1;overflow:hidden;min-height:0;
-}
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;flex-shrink:0}
 
-#checklist{
-  width:220px;flex-shrink:0;
-  border-right:1px solid var(--border);
-  padding:.75rem;
-  overflow-y:auto;
-  display:flex;flex-direction:column;gap:.4rem;
-}
-.chk-item{
-  display:flex;align-items:center;gap:7px;
-  font-size:.78rem;color:var(--muted);
-  transition:color .25s;
-}
-.chk-item.done{color:var(--accent)}
-.chk-item.active-stage{color:var(--warning)}
-.chk-icon{width:16px;text-align:center;font-size:.78rem}
-.chk-item.done .chk-icon::before{content:"✓"}
-.chk-item.active-stage .chk-icon::before{content:"⏳"}
-.chk-item:not(.done):not(.active-stage) .chk-icon::before{content:"○"}
+/* ── Q type radios ── */
+.qtype-row{display:flex;gap:4px;flex-wrap:wrap}
+.qtype-btn{background:var(--surface2);color:var(--muted);border:none;border-radius:var(--radius-sm);padding:4px 10px;font-size:11px;cursor:pointer;transition:background .12s,color .12s}
+.qtype-btn.active,.qtype-btn:not(:disabled):hover{background:var(--blue);color:#fff}
+.qtype-btn:disabled{opacity:.4;cursor:default}
 
-/* Tabs */
-#tabArea{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.tab-bar{
-  display:flex;gap:0;
-  border-bottom:1px solid var(--border);
-  padding:0 .75rem;
-}
-.tab-btn{
-  background:none;color:var(--muted);
-  border-radius:0;padding:.6rem .9rem;
-  font-size:.78rem;font-weight:500;
-  border-bottom:2px solid transparent;
-  margin-bottom:-1px;
-}
-.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent2)}
-.tab-btn:hover:not(.active){color:var(--text)}
-.tab-panel{display:none;flex:1;overflow-y:auto;padding:.75rem;min-height:0}
-.tab-panel.active{display:flex;flex-direction:column;gap:.75rem}
+/* ── Question display ── */
+#q-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);min-height:52px;line-height:1.5;font-style:italic;color:var(--muted)}
+#q-display.has-q{font-style:normal;color:var(--text)}
 
-/* feedback entry styles */
-.entry-transcript{border-left:3px solid var(--border);padding-left:.8rem}
-.entry-feedback{border-left:3px solid var(--accent2);padding-left:.8rem}
-.tag{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.1rem .4rem;border-radius:4px}
-.tag-you{background:#30363d;color:#8b949e}
-.tag-ai{background:rgba(88,166,255,.15);color:var(--accent2)}
-.error-box{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:.55rem .75rem;font-size:.78rem;color:var(--danger);line-height:1.5}
-.empty-state{color:var(--muted);text-align:center;margin:auto;padding:2rem;line-height:1.7;font-size:.85rem}
-.empty-icon{font-size:1.8rem;margin-bottom:10px}
-.hist-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem .85rem;font-size:.78rem;display:flex;flex-direction:column;gap:.3rem}
-.hist-item .hi-q{font-weight:600;color:var(--accent2)}
-.hist-item .hi-meta{color:var(--muted);font-size:.7rem}
+/* ── 4-Step workflow progress ── */
+#workflow-steps{display:flex;align-items:center;gap:0;margin:6px 0 4px;flex-shrink:0}
+.ws-step{display:flex;align-items:center;gap:6px;flex:1}
+.ws-dot{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;transition:all .3s}
+.ws-dot.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.ws-dot.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.ws-label{font-size:10px;color:var(--muted);white-space:nowrap;font-weight:600;transition:color .3s}
+.ws-label.active{color:var(--teal)}
+.ws-label.done{color:var(--ok)}
+.ws-line{flex:1;height:2px;background:var(--border);margin:0 4px;transition:background .3s;min-width:8px}
+.ws-line.done{background:var(--ok)}
 
-/* question display */
-#questionDisplay{
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:var(--radius);padding:.75rem;
-  font-size:.88rem;line-height:1.65;
-  min-height:60px;color:var(--text);
-  flex-shrink:0;
-}
-#questionDisplay.empty{color:var(--muted);font-style:italic}
+/* ── Mic selector row (inside record card) ── */
+.mic-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.mic-row select{flex:1;min-width:140px}
 
-/* badges */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:.18rem .55rem;border-radius:20px;font-size:.68rem;font-weight:600}
-.badge-green{background:rgba(46,160,67,.15);color:var(--accent)}
-.badge-muted{background:var(--panel);color:var(--muted)}
+/* ── Level meter ── */
+.level-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.level-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.level-fill{height:100%;width:0%;border-radius:4px;background:var(--ok);transition:width .08s}
+.level-fill.medium{background:var(--warn)}
+.level-fill.high{background:var(--err)}
+.level-pct{font-family:'Consolas',monospace;font-size:11px;color:var(--muted);width:32px;text-align:right;flex-shrink:0}
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.fade-up{animation:fadeUp .25s ease both}
-@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.5)}50%{box-shadow:0 0 0 10px rgba(248,81,73,0)}}
-.rec-pulse{animation:recPulse 1.2s ease infinite}
+/* ── Recording controls ── */
+.rec-controls{display:flex;align-items:center;gap:8px}
+#timer{font-family:'Consolas',monospace;font-size:15px;color:var(--faint);min-width:48px}
+#timer.recording{color:var(--err);animation:timerBlink .9s ease-in-out infinite}
+@keyframes timerBlink{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── Waveform ── */
+.waveform{display:flex;align-items:center;gap:3px;height:22px;margin-left:auto}
+.waveform-bar{width:3px;background:var(--faint);border-radius:2px;height:6px;transition:height .12s}
+.waveform-bar.active{background:var(--err)}
+@keyframes wave0{0%,100%{height:4px}50%{height:18px}}
+@keyframes wave1{0%,100%{height:7px}50%{height:14px}}
+@keyframes wave2{0%,100%{height:12px}50%{height:22px}}
+@keyframes wave3{0%,100%{height:5px}50%{height:20px}}
+@keyframes wave4{0%,100%{height:9px}50%{height:16px}}
+@keyframes wave5{0%,100%{height:6px}50%{height:12px}}
+@keyframes wave6{0%,100%{height:10px}50%{height:22px}}
+
+/* ── Feedback panel ── */
+#feedback-wrap{flex:1;display:flex;flex-direction:column;min-height:0}
+#feedback-box{flex:1;min-height:0;background:var(--inp);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;font-family:'Segoe UI',sans-serif;overflow-y:auto;line-height:1.6}
+#feedback-box .fb-question-label{color:var(--teal);font-weight:700;font-size:11px}
+#feedback-box .fb-question-text{color:var(--text);font-style:italic;margin-bottom:6px;font-size:13px}
+#feedback-box .fb-you-label{color:var(--blue);font-weight:700;font-size:11px}
+#feedback-box .fb-transcript{color:var(--text);margin-bottom:6px}
+#feedback-box .fb-ai-label{color:var(--teal);font-weight:700;font-size:11px}
+#feedback-box .fb-score-line{font-size:16px;font-weight:700;margin:4px 0}
+#feedback-box .score-high{color:var(--ok)}
+#feedback-box .score-mid{color:var(--warn)}
+#feedback-box .score-low{color:var(--err)}
+#feedback-box .fb-header{color:var(--warn);font-weight:700;font-size:12px;margin-top:8px}
+#feedback-box .fb-good{color:var(--ok);font-size:12px}
+#feedback-box .fb-imp{color:var(--warn);font-size:12px}
+#feedback-box .fb-body{color:var(--text);font-size:12px}
+#feedback-box .fb-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+#feedback-box .fb-ok-msg{color:var(--ok);font-size:11px}
+#feedback-box .placeholder{color:var(--faint);font-style:italic;font-size:12px}
+
+/* ── Bottom bar ── */
+#bottom-bar{background:var(--surface);border-top:1px solid var(--border);padding:6px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.bar-row1{display:flex;align-items:center;gap:8px}
+.bar-row1 .status-text{flex:1;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── AI progress bar (bottom) ── */
+.ai-pbar-wrap{display:flex;align-items:center;gap:8px}
+.ai-track{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;min-width:120px}
+.ai-fill{height:100%;width:0%;background:var(--teal);border-radius:5px;transition:width .25s ease}
+.ai-pbar-label{font-family:'Consolas',monospace;font-size:10px;color:var(--teal);width:140px;flex-shrink:0}
+
+/* ── Nav row ── */
+.nav-row{display:flex;align-items:center;gap:6px}
+.nav-row label{font-size:11px;color:var(--muted)}
+.nav-row select{width:260px;font-size:11px}
+
+/* ── Score ring ── */
+.score-ring-wrap{display:inline-flex;align-items:center;gap:8px;vertical-align:middle;margin:4px 0}
+.score-ring-wrap svg{overflow:visible}
+.score-ring-track{fill:none;stroke:var(--surface2);stroke-width:4}
+.score-ring-arc{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .3s}
+.score-ring-text{font-family:'Segoe UI',sans-serif;font-size:11px;font-weight:700;fill:var(--text);dominant-baseline:central;text-anchor:middle}
+
+/* ── Processing steps ── */
+.proc-step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:2px 0}
+.proc-step .spinner{width:12px;height:12px;border:2px solid var(--surface2);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.proc-step .done-icon{color:var(--ok);font-size:12px;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spin{animation:spin .8s linear infinite;display:inline-block}
-.hidden{display:none!important}
+
+/* ── Session counter ── */
+.session-badge{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:10px;color:var(--muted)}
+.session-badge span{color:var(--teal);font-weight:700}
+
+/* ── Tooltip ── */
+[title]{cursor:help}
+
+/* ── Disabled overlay feel ── */
+.disabled-overlay{pointer-events:none;opacity:.45}
+
+/* ── Ready status dot ── */
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.status-dot.idle{background:var(--faint)}
+.status-dot.ready{background:var(--ok);box-shadow:0 0 0 3px rgba(63,185,80,.2)}
+.status-dot.recording{background:var(--err);animation:pulse-dot .8s ease-in-out infinite}
+.status-dot.busy{background:var(--warn);animation:pulse-dot 1.2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 4px rgba(210,153,34,.3)}}
+
+/* ── Char counter ── */
+.char-counter{font-size:10px;color:var(--faint);margin-left:auto}
+.char-counter.ready-badge{color:var(--ok);font-weight:700}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════ TOP HEADER BAR ═══════════════ -->
-<div id="topbar">
-  <div class="app-brand">
-    <span style="font-size:1.2rem">🎙</span>
-    <span>Interview Prep</span>
-    <span id="spinner" class="spin hidden" style="font-size:.9rem;color:var(--muted)">⟳</span>
+<!-- ══════════════ HEADER ══════════════ -->
+<div id="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg viewBox="0 0 22 22" width="20" height="20" fill="none" aria-label="Interview Prep Assistant">
+      <rect x="2" y="2" width="18" height="18" rx="4" stroke="#4f98a3" stroke-width="1.8"/>
+      <circle cx="11" cy="9" r="3" stroke="#4f98a3" stroke-width="1.5"/>
+      <path d="M5 18c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="#4f98a3" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <h1>Interview Prep Assistant</h1>
   </div>
-
-  <div class="sep"></div>
-
-  <!-- Output Folder -->
-  <div class="hgroup">
-    <span class="lbl">Output Folder</span>
-    <div class="hgroup-row">
-      <input type="text" id="folderInput" value="~/interviews" style="width:140px"/>
-      <button class="btn-ghost" id="browseBtn">📂 Browse</button>
-    </div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- AI Tool -->
-  <div class="hgroup">
-    <span class="lbl">AI Tool</span>
-    <select id="providerSel" style="width:140px">
-      <option>Google Gemini</option>
-      <option>OpenAI</option>
-      <option>Perplexity</option>
-      <option>Custom</option>
-    </select>
-  </div>
-
-  <!-- Model -->
-  <div class="hgroup">
-    <span class="lbl">Model</span>
-    <select id="modelSel" style="width:150px"></select>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- API Key -->
-  <div class="hgroup">
-    <span class="lbl" id="apiKeyLbl">Gemini API Key</span>
-    <input type="password" id="apiKeyInput" placeholder="AIza..." style="width:145px"/>
-  </div>
-  <div class="hgroup" id="openaiKeyWrap">
-    <span class="lbl">OpenAI Key (Whisper)</span>
-    <input type="password" id="openaiKeyInput" placeholder="sk-..." style="width:145px"/>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- Microphone -->
-  <div class="hgroup">
-    <span class="lbl">Microphone</span>
-    <div class="hgroup-row">
-      <select id="micSel" style="width:160px"><option value="default">Default microphone</option></select>
-    </div>
-  </div>
-
-  <!-- Test Mic -->
-  <div class="hgroup">
-    <span class="lbl">Mic Test</span>
-    <div class="hgroup-row">
-      <button class="btn-ghost" id="testMicBtn">🔊 Test Mic</button>
-    </div>
-  </div>
-
-  <!-- Mic Level -->
-  <div class="hgroup" style="min-width:100px">
-    <span class="lbl">Mic Level</span>
-    <div class="hgroup-row">
-      <div class="meter-track" style="flex:1;min-width:80px"><div class="meter-fill" id="headerMeter"></div></div>
-      <span style="font-size:.72rem;color:var(--muted);min-width:32px;text-align:right;font-family:var(--font-mono)" id="headerMeterPct">0%</span>
-    </div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- Go Ready + Status -->
-  <div class="hgroup">
-    <span class="lbl">Session</span>
-    <div class="hgroup-row">
-      <button id="goReadyBtn">⚡ Go Ready</button>
-      <div id="statusPill"><div class="dot"></div><span id="statusPillText">NOT READY</span></div>
-    </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="session-badge">Session attempts: <span id="attempt-count">0</span></span>
+    <span class="backend-badge" id="backend-lbl" style="color:var(--warn)">Web Mode</span>
   </div>
 </div>
 
-<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<!-- ══════════════ SETUP PANEL ══════════════ -->
+<div id="setup">
+  <!-- Row 1: Provider, API Key, Model -->
+  <div class="setup-row">
+    <span class="label">1. AI Provider:</span>
+    <select id="sel-provider">
+      <option>Google Gemini</option>
+      <option>Perplexity</option>
+      <option>OpenAI</option>
+      <option>Custom / Other</option>
+    </select>
+
+    <span class="label">API Key:</span>
+    <input type="password" id="inp-key" class="inp-key" placeholder="Enter your API key..." autocomplete="off"/>
+
+    <span class="label">Model:</span>
+    <select id="sel-model" class="inp-model">
+      <option>gemini-2.5-flash</option>
+      <option>gemini-2.5-pro</option>
+      <option>gemini-2.0-flash</option>
+      <option>gemini-2.5-flash-lite</option>
+      <option>gemini-3.0-flash</option>
+      <option>gemini-3.1-flash</option>
+      <option>gemini-3.1-flash-lite</option>
+      <option>gemini-3.1-pro</option>
+      <option>gemini-3.5-flash</option>
+    </select>
+
+    <span id="url-group" style="display:none;align-items:center;gap:6px">
+      <span class="label">URL:</span>
+      <input type="text" id="inp-url" class="inp-url" placeholder="https://api.example.com"/>
+    </span>
+  </div>
+
+  <!-- Row 2: Output folder -->
+  <div class="setup-row">
+    <span class="label">2. Output Folder:</span>
+    <input type="text" id="inp-outdir" class="inp-dir" value="~/InterviewPrepOutput"/>
+    <button class="btn-dim" onclick="alert('Folder selection works in the desktop app.')">Browse…</button>
+  </div>
+
+  <!-- Row 3: Go Ready + status -->
+  <div class="setup-row" style="margin-top:8px">
+    <button class="btn-go" id="btn-go-ready" onclick="goReady()">Go Ready</button>
+    <button class="btn-dim" onclick="resetAll()" style="font-size:12px">Reset</button>
+    <div id="lbl-ready" class="not-ready">STATUS: NOT READY</div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN COLUMNS ══════════════ -->
 <div id="main">
 
-  <!-- ── 2-COL WORKFLOW ── -->
-  <div id="workflow">
+  <!-- ══ LEFT COLUMN ══ -->
+  <div class="col col-left" id="left-col">
 
-    <!-- LEFT: CV + JD -->
-    <div class="col">
-
-      <!-- CV -->
-      <div class="card flex-fill" id="cvCard">
-        <div class="card-head">
-          <span class="card-title">📄 CV / Resume</span>
-          <span id="cvBadge" class="badge badge-muted">Empty</span>
-          <button class="btn-ghost" id="cvFileBtn" disabled>⬆ Upload</button>
-          <button class="btn-ghost" id="cvClearBtn" disabled>✕ Clear</button>
-          <input type="file" id="cvFileInput" accept=".txt,.pdf" style="display:none"/>
-        </div>
-        <textarea class="ta-fill" id="cvText" placeholder="Paste your CV / Resume here, or upload a .txt file..." disabled></textarea>
+    <!-- CV -->
+    <div class="doc-panel" style="flex:1">
+      <div class="sec-title">Your CV / Resume</div>
+      <div class="doc-toolbar">
+        <button class="btn-up" onclick="fakeUpload('cv')">Upload PDF / Word</button>
+        <button class="btn-dim" onclick="clearPanel('cv')">Clear</button>
+        <span class="doc-filename" id="cv-filename"></span>
+        <span class="char-counter" id="cv-chars">0 chars</span>
       </div>
-
-      <!-- JD -->
-      <div class="card flex-fill" id="jdCard">
-        <div class="card-head">
-          <span class="card-title">💼 Job Description</span>
-          <span id="jdBadge" class="badge badge-muted">Empty</span>
-          <button class="btn-ghost" id="jdFileBtn" disabled>⬆ Upload</button>
-          <button class="btn-ghost" id="jdClearBtn" disabled>✕ Clear</button>
-          <input type="file" id="jdFileInput" accept=".txt" style="display:none"/>
-        </div>
-        <textarea class="ta-fill" id="jdText" placeholder="Paste the Job Description here, or upload a .txt file..." disabled></textarea>
-      </div>
-
+      <textarea id="cv-text" class="doc-textarea placeholder-active" placeholder=""
+        oninput="onDocInput('cv')"
+        onfocus="clearPlaceholder('cv')"
+        onblur="restorePlaceholder('cv')"
+      >Paste your CV / resume here, or upload a PDF / Word file...</textarea>
     </div>
 
-    <!-- RIGHT: Question + Recording -->
-    <div class="col">
+    <!-- JD -->
+    <div class="doc-panel" style="flex:1">
+      <div class="sec-title">Job Description</div>
+      <div class="doc-toolbar">
+        <button class="btn-up" onclick="fakeUpload('jd')">Upload PDF / Word</button>
+        <button class="btn-dim" onclick="clearPanel('jd')">Clear</button>
+        <span class="doc-filename" id="jd-filename"></span>
+        <span class="char-counter" id="jd-chars">0 chars</span>
+      </div>
+      <textarea id="jd-text" class="doc-textarea placeholder-active" placeholder=""
+        oninput="onDocInput('jd')"
+        onfocus="clearPlaceholder('jd')"
+        onblur="restorePlaceholder('jd')"
+      >Paste the job description here, or upload a PDF / Word file...</textarea>
+    </div>
 
-      <!-- Interview Question -->
-      <div class="card" id="questionCard">
-        <div class="card-head">
-          <span class="card-title">🎯 Interview Question</span>
+  </div><!-- end left col -->
+
+  <!-- ══ RIGHT COLUMN ══ -->
+  <div class="col" id="right-col">
+
+    <div class="sec-title" style="margin-bottom:0">Interview Session</div>
+
+    <!-- ── 4-Step Workflow Progress ── -->
+    <div id="workflow-steps">
+      <div class="ws-step">
+        <div class="ws-dot active" id="ws-dot-1">1</div>
+        <span class="ws-label active" id="ws-lbl-1">Context</span>
+      </div>
+      <div class="ws-line" id="ws-line-1"></div>
+      <div class="ws-step">
+        <div class="ws-dot" id="ws-dot-2">2</div>
+        <span class="ws-label" id="ws-lbl-2">Question</span>
+      </div>
+      <div class="ws-line" id="ws-line-2"></div>
+      <div class="ws-step">
+        <div class="ws-dot" id="ws-dot-3">3</div>
+        <span class="ws-label" id="ws-lbl-3">Record</span>
+      </div>
+      <div class="ws-line" id="ws-line-3"></div>
+      <div class="ws-step">
+        <div class="ws-dot" id="ws-dot-4">4</div>
+        <span class="ws-label" id="ws-lbl-4">Feedback</span>
+      </div>
+    </div>
+
+    <!-- ── Question Card ── -->
+    <div class="card" id="question-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="label">Type:</span>
+        <div class="qtype-row" id="qtype-row">
+          <button class="qtype-btn active" data-type="behavioral" onclick="setQtype(this)">Behavioral</button>
+          <button class="qtype-btn" data-type="technical" onclick="setQtype(this)">Technical</button>
+          <button class="qtype-btn" data-type="situational" onclick="setQtype(this)">Situational</button>
+          <button class="qtype-btn" data-type="motivation" onclick="setQtype(this)">Motivation</button>
         </div>
-        <div id="qtypePills">
-          <button class="qpill active" data-q="Behavioral">Behavioral</button>
-          <button class="qpill" data-q="Technical">Technical</button>
-          <button class="qpill" data-q="Situational">Situational</button>
-          <button class="qpill" data-q="Motivation">Motivation</button>
-        </div>
-        <button class="btn-primary" id="genQBtn" disabled style="align-self:flex-start;padding:.45rem 1.1rem">✦ Generate Question</button>
-        <div id="questionDisplay" class="empty">Click Generate Question to get an interview question tailored to your CV and JD...</div>
       </div>
 
-      <!-- Recording -->
-      <div class="card" id="recCard">
-        <div class="card-head">
-          <span class="card-title">🔴 Recording</span>
-          <div id="waveform">
-            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
-            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
-            <div class="wbar"></div>
-          </div>
+      <div class="label" style="margin-bottom:4px">Question:</div>
+      <div id="q-display">Click 'Generate Question' to begin...</div>
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn-blue" id="btn-gen" onclick="generateQuestion()" disabled>Generate Question</button>
+        <button class="btn-dim" id="btn-new" onclick="generateQuestion()" disabled>New Question</button>
+      </div>
+    </div>
+
+    <!-- ── Record Card ── -->
+    <div class="card" id="record-card">
+      <div class="sec-title" style="margin-bottom:8px">Record Your Answer</div>
+
+      <!-- Mic selector (moved here from setup panel) -->
+      <div class="mic-row">
+        <span class="label" style="white-space:nowrap">🎤 Mic:</span>
+        <select id="sel-mic" style="flex:1;min-width:160px">
+          <option>Default Microphone</option>
+          <option>Microphone (Realtek Audio)</option>
+          <option>Headset Microphone</option>
+        </select>
+        <button class="btn-icon" onclick="refreshMics()" title="Refresh mic list">⟳</button>
+        <button class="btn-teal" id="btn-test-mic" onclick="testMic()">Test Mic (3s)</button>
+        <button class="btn-warn" id="btn-play-back" onclick="playBack()">Play Back</button>
+      </div>
+
+      <!-- Level meter -->
+      <div class="level-bar-wrap">
+        <span class="label" style="white-space:nowrap">Level:</span>
+        <div class="level-track">
+          <div class="level-fill" id="level-fill"></div>
         </div>
-        <!-- mic meter -->
-        <div class="row">
-          <span class="lbl" style="margin:0;min-width:60px">Mic level</span>
-          <div class="meter-track"><div class="meter-fill" id="recMeter"></div></div>
-          <span style="font-size:.72rem;color:var(--muted);min-width:34px;text-align:right;font-family:var(--font-mono)" id="recMeterPct">0%</span>
-        </div>
-        <div id="micError" class="error-box hidden"></div>
-        <div class="row">
-          <span class="timer" id="timerDisplay">00:00</span>
-          <span style="font-size:.75rem;color:var(--muted);flex:1" id="recStatus">Ready to record</span>
-          <button id="startRecBtn" class="btn-primary" disabled>▶ Start Recording</button>
-          <button id="stopRecBtn" class="btn-danger hidden" disabled>■ Stop Recording</button>
-          <button class="btn-ghost" id="openFolderBtn" disabled>📂 Open Session Folder</button>
+        <span class="level-pct" id="level-pct">0%</span>
+      </div>
+
+      <!-- Recording controls -->
+      <div class="rec-controls">
+        <span id="timer">00:00</span>
+        <button class="btn-green" id="btn-record" onclick="toggleRecord()" disabled>Start Recording</button>
+        <button class="btn-dim" id="btn-open-sess" onclick="alert('Session folder opens in the desktop app.')" disabled>
+          📂 Open Session Folder
+        </button>
+        <div class="waveform" id="waveform">
+          <div class="waveform-bar" id="wb0"></div>
+          <div class="waveform-bar" id="wb1"></div>
+          <div class="waveform-bar" id="wb2"></div>
+          <div class="waveform-bar" id="wb3"></div>
+          <div class="waveform-bar" id="wb4"></div>
+          <div class="waveform-bar" id="wb5"></div>
+          <div class="waveform-bar" id="wb6"></div>
         </div>
       </div>
 
+      <!-- Processing steps (shown during transcribe / analyse) -->
+      <div id="proc-steps" style="margin-top:8px;display:none;flex-direction:column;gap:4px">
+        <div class="proc-step" id="proc-step-1">
+          <div class="spinner" id="proc-spin-1"></div>
+          <span id="proc-text-1">Transcribing audio…</span>
+        </div>
+        <div class="proc-step" id="proc-step-2" style="opacity:.4">
+          <div class="spinner" id="proc-spin-2" style="border-top-color:var(--surface2)"></div>
+          <span id="proc-text-2">Analysing answer…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Feedback Panel ── -->
+    <div class="feedback-wrap" id="feedback-wrap" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0">
+        <span class="sec-title" style="margin-bottom:0">AI Feedback &amp; Score</span>
+        <div style="display:flex;gap:4px">
+          <button class="btn-dim" style="font-size:11px" onclick="copyFeedback()">Copy Feedback</button>
+          <button class="btn-dim" style="font-size:11px;color:var(--muted)" id="btn-clear-session" onclick="clearSession()">Clear Session</button>
+        </div>
+      </div>
+      <div id="feedback-box" style="flex:1;min-height:0;background:var(--inp);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;overflow-y:auto;line-height:1.6">
+        <span class="placeholder">Your AI feedback will appear here after each answer…</span>
+      </div>
+    </div>
+
+  </div><!-- end right col -->
+</div><!-- end main -->
+
+<!-- ══════════════ BOTTOM BAR ══════════════ -->
+<div id="bottom-bar">
+  <div class="bar-row1">
+    <div class="status-dot idle" id="status-dot"></div>
+    <span class="status-text" id="status-text">Not Ready — complete Setup &amp; hit Go Ready</span>
+    <div class="ai-pbar-wrap" style="flex:1;max-width:400px">
+      <div class="ai-track">
+        <div class="ai-fill" id="ai-fill"></div>
+      </div>
+      <span class="ai-pbar-label" id="ai-pbar-lbl">Idle</span>
     </div>
   </div>
-
-  <!-- ── FEEDBACK SECTION (full width) ── -->
-  <div id="feedbackSection" style="flex:0 0 300px">
-
-    <!-- Progress tracker -->
-    <div id="progressArea">
-      <div class="prog-top">
-        <span class="lbl" style="margin:0">Workflow Progress</span>
-        <span id="progressPct">0%</span>
-      </div>
-      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-      <div id="currentStageText">Complete the setup above and click Go Ready to begin...</div>
-    </div>
-
-    <div id="feedBody">
-
-      <!-- Checklist -->
-      <div id="checklist">
-        <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Stages</div>
-        <div class="chk-item" data-stage="0"><span class="chk-icon"></span>Setup Complete</div>
-        <div class="chk-item" data-stage="1"><span class="chk-icon"></span>Mic Tested</div>
-        <div class="chk-item" data-stage="2"><span class="chk-icon"></span>CV Loaded</div>
-        <div class="chk-item" data-stage="3"><span class="chk-icon"></span>JD Loaded</div>
-        <div class="chk-item" data-stage="4"><span class="chk-icon"></span>Question Generated</div>
-        <div class="chk-item" data-stage="5"><span class="chk-icon"></span>Recording Complete</div>
-        <div class="chk-item" data-stage="6"><span class="chk-icon"></span>Transcript Complete</div>
-        <div class="chk-item" data-stage="7"><span class="chk-icon"></span>AI Feedback Complete</div>
-      </div>
-
-      <!-- Tabs -->
-      <div id="tabArea">
-        <div class="tab-bar">
-          <button class="tab-btn active" data-tab="transcript">📝 Transcript</button>
-          <button class="tab-btn" data-tab="feedback">💡 AI Feedback</button>
-          <button class="tab-btn" data-tab="history">📋 Session History</button>
-          <div style="flex:1"></div>
-          <button class="btn-ghost" id="copyBtn" style="margin:auto .25rem">⎘ Copy</button>
-          <button class="btn-ghost" id="clearBtn" style="margin:auto .25rem">✕ Clear</button>
-        </div>
-
-        <div class="tab-panel active" id="tab-transcript">
-          <div class="empty-state" id="transcriptEmpty">
-            <div class="empty-icon">🎙</div>
-            <p>Your transcribed answer will appear here after recording.</p>
-          </div>
-        </div>
-
-        <div class="tab-panel" id="tab-feedback">
-          <div class="empty-state" id="feedbackEmpty">
-            <div class="empty-icon">💡</div>
-            <p>AI coaching feedback will appear here after transcription.</p>
-          </div>
-        </div>
-
-        <div class="tab-panel" id="tab-history">
-          <div class="empty-state" id="historyEmpty">
-            <div class="empty-icon">📋</div>
-            <p>Completed Q&amp;A sessions will be logged here.</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
+  <!-- Jump / Nav row -->
+  <div class="nav-row">
+    <label>Jump to Q&amp;A:</label>
+    <select id="nav-cb" disabled onchange="jumpToQA()">
+      <option value="">— no history —</option>
+    </select>
+    <button class="btn-dim" style="font-size:11px" id="btn-prev" onclick="navPrev()" disabled>▲ Prev</button>
+    <button class="btn-dim" style="font-size:11px" id="btn-next" onclick="navNext()" disabled>▼ Next</button>
+    <button class="btn-teal" style="font-size:11px" id="btn-last" onclick="scrollFbToEnd()" disabled>⤓ Latest</button>
   </div>
-
 </div>
 
 <script>
-// ─── PROVIDERS ───────────────────────────────────────────
-const PROVIDERS={
-  "Google Gemini":["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-2.0-flash"],
-  "OpenAI":["gpt-4o-mini","gpt-4o","gpt-4-turbo"],
-  "Perplexity":["sonar","sonar-pro"],
-  "Custom":["custom-model"]
+// ══════════════════════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════════════════════
+const CV_PH = 'Paste your CV / resume here, or upload a PDF / Word file...';
+const JD_PH = 'Paste the job description here, or upload a PDF / Word file...';
+
+let state = {
+  ready: false,
+  micTested: false,
+  recording: false,
+  timerInterval: null,
+  timerStart: 0,
+  question: '',
+  qtype: 'behavioral',
+  qaHistory: [],
+  attempts: 0,
+  aiPbarAnim: null,
+  levelAnim: null,
+  waveAnim: null,
+  micTestData: null,
 };
 
-// ─── STATE ───────────────────────────────────────────────
-const S={
-  provider:"Google Gemini",model:"gemini-2.5-flash",
-  apiKey:"",openaiKey:"",
-  qtype:"Behavioral",
-  ready:false,micTested:false,
-  recording:false,busy:false,
-  elapsed:0,
-  transcriptEntries:[],feedbackEntries:[],
-  history:[],
-  stages:Array(8).fill(false), // 0=Setup 1=MicTest 2=CV 3=JD 4=Q 5=Rec 6=Transcript 7=Feedback
-  currentStage:-1,
-  folder:"~/interviews"
+// Provider model lists
+const PROVIDER_MODELS = {
+  'Google Gemini': ['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash','gemini-2.5-flash-lite','gemini-3.0-flash','gemini-3.1-flash','gemini-3.1-flash-lite','gemini-3.1-pro','gemini-3.5-flash'],
+  'Perplexity': ['sonar','sonar-pro'],
+  'OpenAI': ['gpt-4o-mini','gpt-4o'],
+  'Custom / Other': [],
 };
 
-// ─── STAGE LABELS ────────────────────────────────────────
-const STAGE_LABELS=[
-  "Setup Complete","Mic Tested","CV Loaded","JD Loaded",
-  "Question Generated","Recording Complete","Transcript Complete","AI Feedback Complete"
-];
-const STAGE_MSGS=[
-  "Setup complete — ready to test mic",
-  "Mic tested — load your CV to continue",
-  "CV loaded — load the Job Description",
-  "JD loaded — generate an interview question",
-  "Question ready — start recording your answer",
-  "Recording captured — transcribing audio...",
-  "Transcript ready — analysing with AI...",
-  "AI feedback complete! Review your results below."
-];
-
-// ─── REFS ─────────────────────────────────────────────────
-const $=id=>document.getElementById(id);
-const folderInput=$("folderInput"),browseBtn=$("browseBtn");
-const providerSel=$("providerSel"),modelSel=$("modelSel"),apiKeyInput=$("apiKeyInput"),apiKeyLbl=$("apiKeyLbl"),openaiKeyInput=$("openaiKeyInput"),openaiKeyWrap=$("openaiKeyWrap");
-const micSel=$("micSel"),testMicBtn=$("testMicBtn"),headerMeter=$("headerMeter"),headerMeterPct=$("headerMeterPct");
-const goReadyBtn=$("goReadyBtn"),statusPill=$("statusPill"),statusPillText=$("statusPillText");
-const cvText=$("cvText"),jdText=$("jdText"),cvFileBtn=$("cvFileBtn"),jdFileBtn=$("jdFileBtn"),cvClearBtn=$("cvClearBtn"),jdClearBtn=$("jdClearBtn"),cvFileInput=$("cvFileInput"),jdFileInput=$("jdFileInput"),cvBadge=$("cvBadge"),jdBadge=$("jdBadge");
-const qtypePills=$("qtypePills"),genQBtn=$("genQBtn"),questionDisplay=$("questionDisplay");
-const recCard=$("recCard"),recMeter=$("recMeter"),recMeterPct=$("recMeterPct"),micError=$("micError"),timerDisplay=$("timerDisplay"),recStatus=$("recStatus");
-const startRecBtn=$("startRecBtn"),stopRecBtn=$("stopRecBtn"),openFolderBtn=$("openFolderBtn");
-const progFill=$("progFill"),progressPct=$("progressPct"),currentStageText=$("currentStageText");
-const copyBtn=$("copyBtn"),clearBtn=$("clearBtn"),spinner=$("spinner");
-const wbars=document.querySelectorAll(".wbar");
-
-let mediaRecorder=null,audioChunks=[],audioCtx=null,analyserNode=null,animFrame=null,timerInterval=null;
-let testStream=null,testAnimFrame=null;
-
-// ─── LOCK / UNLOCK ──────────────────────────────────────
-const workflowEls=[
-  cvText,cvFileBtn,cvClearBtn,
-  jdText,jdFileBtn,jdClearBtn,
-  genQBtn,startRecBtn,openFolderBtn
-];
-function setWorkflowEnabled(en){
-  workflowEls.forEach(el=>{el.disabled=!en;});
-  if(en)stopRecBtn.disabled=true; // stopRec managed separately
+// ══════════════════════════════════════════════════════════════
+//  Placeholder helpers
+// ══════════════════════════════════════════════════════════════
+function clearPlaceholder(panel) {
+  const el = panel === 'cv' ? document.getElementById('cv-text') : document.getElementById('jd-text');
+  const ph = panel === 'cv' ? CV_PH : JD_PH;
+  if (el.value === ph) { el.value = ''; el.classList.remove('placeholder-active'); }
+}
+function restorePlaceholder(panel) {
+  const el = panel === 'cv' ? document.getElementById('cv-text') : document.getElementById('jd-text');
+  const ph = panel === 'cv' ? CV_PH : JD_PH;
+  if (!el.value.trim()) { el.value = ph; el.classList.add('placeholder-active'); }
+}
+function onDocInput(panel) {
+  const el = panel === 'cv' ? document.getElementById('cv-text') : document.getElementById('jd-text');
+  const ph = panel === 'cv' ? CV_PH : JD_PH;
+  const chars = el.value === ph ? 0 : el.value.length;
+  const counter = document.getElementById(panel === 'cv' ? 'cv-chars' : 'jd-chars');
+  if (chars > 200) { counter.textContent = chars.toLocaleString() + ' chars ✓'; counter.className = 'char-counter ready-badge'; }
+  else { counter.textContent = chars.toLocaleString() + ' chars'; counter.className = 'char-counter'; }
+}
+function clearPanel(panel) {
+  const el = panel === 'cv' ? document.getElementById('cv-text') : document.getElementById('jd-text');
+  const ph = panel === 'cv' ? CV_PH : JD_PH;
+  const fn = panel === 'cv' ? 'cv-filename' : 'jd-filename';
+  el.value = ph; el.classList.add('placeholder-active');
+  document.getElementById(fn).textContent = '';
+  onDocInput(panel);
+}
+function fakeUpload(panel) {
+  const name = panel === 'cv' ? 'resume.pdf' : 'job_description.pdf';
+  const fn = panel === 'cv' ? 'cv-filename' : 'jd-filename';
+  const el = panel === 'cv' ? document.getElementById('cv-text') : document.getElementById('jd-text');
+  const ph = panel === 'cv' ? CV_PH : JD_PH;
+  el.value = ph; el.classList.add('placeholder-active');
+  document.getElementById(fn).textContent = 'Loaded: ' + name;
+  setStatus(`Loaded ${name} — paste your real content in the desktop app`, 'muted');
+  onDocInput(panel);
 }
 
-// ─── PROVIDERS ──────────────────────────────────────────
-function populateModels(){
-  modelSel.innerHTML="";
-  (PROVIDERS[S.provider]||[]).forEach(m=>{
-    const o=document.createElement("option");o.value=o.textContent=m;
-    if(m===S.model)o.selected=true;
-    modelSel.appendChild(o);
-  });
-}
-function syncProviderUI(){
-  providerSel.value=S.provider;
-  populateModels();
-  apiKeyLbl.textContent=S.provider+" Key";
-  apiKeyInput.placeholder=S.provider==="Google Gemini"?"AIza...":"sk-...";
-  openaiKeyWrap.classList.toggle("hidden",S.provider==="OpenAI");
-}
-providerSel.addEventListener("change",()=>{
-  S.provider=providerSel.value;
-  S.model=(PROVIDERS[S.provider]||[])[0]||"";
-  syncProviderUI();
-});
-modelSel.addEventListener("change",()=>S.model=modelSel.value);
-apiKeyInput.addEventListener("input",()=>S.apiKey=apiKeyInput.value.trim());
-openaiKeyInput.addEventListener("input",()=>S.openaiKey=openaiKeyInput.value.trim());
-syncProviderUI();
-
-// ─── FOLDER ─────────────────────────────────────────────
-folderInput.addEventListener("change",()=>S.folder=folderInput.value);
-browseBtn.addEventListener("click",()=>{
-  const v=prompt("Enter output folder path:",S.folder);
-  if(v){S.folder=v;folderInput.value=v;}
+// ══════════════════════════════════════════════════════════════
+//  Provider change
+// ══════════════════════════════════════════════════════════════
+document.getElementById('sel-provider').addEventListener('change', function() {
+  const p = this.value;
+  const models = PROVIDER_MODELS[p] || [];
+  const sel = document.getElementById('sel-model');
+  sel.innerHTML = models.map(m => `<option>${m}</option>`).join('') || '<option></option>';
+  document.getElementById('url-group').style.display = p === 'Custom / Other' ? 'flex' : 'none';
 });
 
-// ─── MIC LIST ───────────────────────────────────────────
-async function loadMics(){
-  try{
-    await navigator.mediaDevices.getUserMedia({audio:true});
-    const all=await navigator.mediaDevices.enumerateDevices();
-    const mics=all.filter(d=>d.kind==="audioinput");
-    micSel.innerHTML='<option value="default">Default microphone</option>';
-    mics.forEach(d=>{
-      const o=document.createElement("option");o.value=d.deviceId;
-      o.textContent=d.label||"Mic "+d.deviceId.slice(0,8);
-      micSel.appendChild(o);
-    });
-  }catch(e){
-    showMicError("Microphone access denied.");
+// ══════════════════════════════════════════════════════════════
+//  Status helpers
+// ══════════════════════════════════════════════════════════════
+function setStatus(msg, mode) {
+  document.getElementById('status-text').textContent = msg;
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot ' + (mode || 'idle');
+}
+function setReady(ok, msg) {
+  const lbl = document.getElementById('lbl-ready');
+  lbl.textContent = ok ? 'STATUS: READY' : 'STATUS: NOT READY';
+  lbl.className = ok ? 'ready' : 'not-ready';
+  state.ready = ok;
+  setBottomEnabled(ok);
+  if (ok) setStatus(msg || 'Ready — Paste CV & JD, then click Generate Question', 'ready');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Enable / disable bottom section
+// ══════════════════════════════════════════════════════════════
+function setBottomEnabled(en) {
+  const ids = ['btn-gen','btn-new','btn-record','btn-open-sess','btn-clear-session','nav-cb','btn-prev','btn-next','btn-last'];
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.disabled = !en; });
+  ['cv-text','jd-text'].forEach(id => { document.getElementById(id).disabled = !en; });
+  document.querySelectorAll('.qtype-btn').forEach(b => b.disabled = !en);
+  document.getElementById('left-col').style.opacity = en ? '1' : '.5';
+  document.getElementById('left-col').style.pointerEvents = en ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Go Ready
+// ══════════════════════════════════════════════════════════════
+function goReady() {
+  const key = document.getElementById('inp-key').value.trim();
+  if (!key) { alert('Cannot proceed:\n\n• API Key missing'); return; }
+  if (!state.micTested) { alert('Cannot proceed:\n\n• Please run Test Mic (3s) first to verify audio'); return; }
+  setReady(true);
+}
+function resetAll() {
+  state.ready = false; state.micTested = false; state.question = '';
+  state.qaHistory = []; state.attempts = 0;
+  document.getElementById('inp-key').value = '';
+  document.getElementById('attempt-count').textContent = '0';
+  clearPanel('cv'); clearPanel('jd');
+  document.getElementById('lbl-ready').textContent = 'STATUS: NOT READY';
+  document.getElementById('lbl-ready').className = 'not-ready';
+  clearFeedbackBox(); setBottomEnabled(false);
+  document.getElementById('q-display').textContent = "Click 'Generate Question' to begin...";
+  document.getElementById('q-display').className = '';
+  setStatus('Reset complete. Complete setup and click Go Ready.', 'idle');
+  setWorkflowStep(1); resetNavCb();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Workflow steps
+// ══════════════════════════════════════════════════════════════
+function setWorkflowStep(step) {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('ws-dot-' + i);
+    const lbl = document.getElementById('ws-lbl-' + i);
+    if (i < step) { dot.className = 'ws-dot done'; dot.textContent = '✓'; lbl.className = 'ws-label done'; }
+    else if (i === step) { dot.className = 'ws-dot active'; dot.textContent = String(i); lbl.className = 'ws-label active'; }
+    else { dot.className = 'ws-dot'; dot.textContent = String(i); lbl.className = 'ws-label'; }
+    if (i < 4) { document.getElementById('ws-line-' + i).className = 'ws-line' + (i < step ? ' done' : ''); }
   }
 }
-loadMics();
 
-// ─── TEST MIC ───────────────────────────────────────────
-async function testMic(){
-  if(testStream){testStream.getTracks().forEach(t=>t.stop());testStream=null;cancelAnimationFrame(testAnimFrame);updateMeter(headerMeter,headerMeterPct,0);testMicBtn.textContent="🔊 Test Mic";return;}
-  try{
-    const did=micSel.value;
-    const constraints={audio:did&&did!=="default"?{deviceId:{exact:did}}:true};
-    testStream=await navigator.mediaDevices.getUserMedia(constraints);
-    const ctx=new AudioContext();
-    const src=ctx.createMediaStreamSource(testStream);
-    const an=ctx.createAnalyser();an.fftSize=256;
-    src.connect(an);
-    const buf=new Uint8Array(an.frequencyBinCount);
-    testMicBtn.textContent="⏹ Stop Test";
-    function tick(){
-      an.getByteFrequencyData(buf);
-      const avg=buf.reduce((a,b)=>a+b,0)/buf.length/70;
-      updateMeter(headerMeter,headerMeterPct,Math.min(avg,1)*100);
-      testAnimFrame=requestAnimationFrame(tick);
+// ══════════════════════════════════════════════════════════════
+//  Mic controls
+// ══════════════════════════════════════════════════════════════
+function refreshMics() {
+  setStatus('Refreshing mic list…', 'busy');
+  setTimeout(() => setStatus('Mic list refreshed.', 'ready'), 600);
+}
+
+function testMic() {
+  if (!window.MediaRecorder) { alert('Your browser does not support MediaRecorder.'); return; }
+  setStatus('Mic Test: recording 3s — speak now!', 'recording');
+  document.getElementById('btn-test-mic').disabled = true;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    const chunks = []; const mr = new MediaRecorder(stream);
+    startLevelMeter(stream);
+    mr.ondataavailable = e => chunks.push(e.data);
+    mr.onstop = () => {
+      stopLevelMeter();
+      stream.getTracks().forEach(t => t.stop());
+      state.micTestData = new Blob(chunks, { type: 'audio/webm' });
+      state.micTested = true;
+      document.getElementById('btn-test-mic').disabled = false;
+      document.getElementById('btn-play-back').disabled = false;
+      setStatus('Mic test passed — click Go Ready to proceed', 'ready');
+      setLevelFill(0);
+    };
+    mr.start(); setTimeout(() => mr.stop(), 3000);
+  }).catch(err => {
+    stopLevelMeter(); setLevelFill(0);
+    document.getElementById('btn-test-mic').disabled = false;
+    setStatus('Mic access denied: ' + err.message, 'idle');
+    alert('Mic Test Failed\n\nCould not access microphone:\n' + err.message);
+  });
+}
+
+function playBack() {
+  if (!state.micTestData) { alert('Test Mic first.'); return; }
+  const url = URL.createObjectURL(state.micTestData);
+  const a = new Audio(url); a.play();
+  a.onended = () => URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Level meter
+// ══════════════════════════════════════════════════════════════
+function startLevelMeter(stream) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = ctx.createMediaStreamSource(stream);
+  const analyser = ctx.createAnalyser(); analyser.fftSize = 256;
+  src.connect(analyser);
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  function tick() {
+    analyser.getByteTimeDomainData(buf);
+    let max = 0; for (let v of buf) { const d = Math.abs(v - 128); if (d > max) max = d; }
+    const pct = Math.min(Math.round(max / 128 * 100 * 5), 100);
+    setLevelFill(pct);
+    if (state.recording || state.levelAnim) state.levelAnim = requestAnimationFrame(tick);
+  }
+  state.levelAnim = requestAnimationFrame(tick);
+  state._levelCtx = ctx;
+}
+function stopLevelMeter() {
+  if (state.levelAnim) { cancelAnimationFrame(state.levelAnim); state.levelAnim = null; }
+  if (state._levelCtx) { try { state._levelCtx.close(); } catch(e){} state._levelCtx = null; }
+}
+function setLevelFill(pct) {
+  const fill = document.getElementById('level-fill');
+  document.getElementById('level-pct').textContent = pct + '%';
+  fill.style.width = pct + '%';
+  fill.className = 'level-fill' + (pct > 70 ? ' high' : pct > 40 ? ' medium' : '');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Waveform animation
+// ══════════════════════════════════════════════════════════════
+const WAVE_ANIMS = ['wave0','wave1','wave2','wave3','wave4','wave5','wave6'];
+function startWaveform() {
+  WAVE_ANIMS.forEach((a, i) => {
+    const el = document.getElementById('wb' + i);
+    el.classList.add('active');
+    el.style.animation = `${a} ${0.6 + i * 0.07}s ease-in-out infinite`;
+  });
+}
+function stopWaveform() {
+  WAVE_ANIMS.forEach((a, i) => {
+    const el = document.getElementById('wb' + i);
+    el.classList.remove('active');
+    el.style.animation = '';
+    el.style.height = '6px';
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Timer
+// ══════════════════════════════════════════════════════════════
+function startTimer() {
+  state.timerStart = Date.now();
+  state.timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - state.timerStart) / 1000);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    document.getElementById('timer').textContent = mm + ':' + ss;
+  }, 500);
+  document.getElementById('timer').className = 'recording';
+}
+function stopTimer() {
+  clearInterval(state.timerInterval);
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('timer').className = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Recording toggle
+// ══════════════════════════════════════════════════════════════
+let _mediaRecorder = null, _recChunks = [], _recStream = null;
+
+function toggleRecord() {
+  if (!state.ready) return;
+  if (state.recording) stopRecord();
+  else startRecord();
+}
+
+function startRecord() {
+  if (!state.question) { alert('Generate a question first.'); return; }
+  if (!window.MediaRecorder) { alert('Recording not supported in this browser.'); return; }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    _recStream = stream; _recChunks = [];
+    _mediaRecorder = new MediaRecorder(stream);
+    _mediaRecorder.ondataavailable = e => _recChunks.push(e.data);
+    _mediaRecorder.onstop = onRecordStop;
+    _mediaRecorder.start();
+    state.recording = true;
+    startTimer(); startWaveform(); startLevelMeter(stream);
+    setStatus('Recording…', 'recording');
+    document.getElementById('btn-record').textContent = 'Stop Recording';
+    document.getElementById('btn-record').className = 'btn-red';
+    setWorkflowStep(3);
+  }).catch(err => { setStatus('Mic access denied: ' + err.message, 'idle'); });
+}
+
+function stopRecord() {
+  if (_mediaRecorder && _mediaRecorder.state !== 'inactive') _mediaRecorder.stop();
+  if (_recStream) { _recStream.getTracks().forEach(t => t.stop()); _recStream = null; }
+  state.recording = false;
+  stopTimer(); stopWaveform(); stopLevelMeter(); setLevelFill(0);
+  document.getElementById('btn-record').textContent = 'Start Recording';
+  document.getElementById('btn-record').className = 'btn-green';
+  setStatus('Processing recording…', 'busy');
+}
+
+function onRecordStop() {
+  state.attempts++;
+  document.getElementById('attempt-count').textContent = state.attempts;
+  showProcSteps();
+  // Simulate transcription + analysis
+  setTimeout(() => {
+    completeStep1();
+    setTimeout(() => {
+      completeStep2();
+      setTimeout(() => {
+        hideProcSteps();
+        simulateFeedback();
+      }, 1200);
+    }, 1000);
+  }, 1500);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Processing steps UI
+// ══════════════════════════════════════════════════════════════
+function showProcSteps() {
+  const el = document.getElementById('proc-steps');
+  el.style.display = 'flex';
+  document.getElementById('proc-step-1').style.opacity = '1';
+  document.getElementById('proc-spin-1').style.borderTopColor = 'var(--teal)';
+  document.getElementById('proc-text-1').textContent = 'Transcribing audio…';
+  document.getElementById('proc-step-2').style.opacity = '.4';
+  document.getElementById('proc-spin-2').style.borderTopColor = 'var(--surface2)';
+  document.getElementById('proc-text-2').textContent = 'Analysing answer…';
+}
+function completeStep1() {
+  const step = document.getElementById('proc-step-1');
+  step.innerHTML = '<span class="done-icon">✓</span><span>Transcription complete</span>';
+  document.getElementById('proc-step-2').style.opacity = '1';
+  document.getElementById('proc-spin-2').style.borderTopColor = 'var(--teal)';
+  progressStart('Analysing');
+}
+function completeStep2() {
+  const step = document.getElementById('proc-step-2');
+  step.innerHTML = '<span class="done-icon">✓</span><span>Analysis complete</span>';
+}
+function hideProcSteps() {
+  setTimeout(() => { document.getElementById('proc-steps').style.display = 'none'; }, 800);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AI progress bar (bottom)
+// ══════════════════════════════════════════════════════════════
+function progressStart(label) {
+  clearInterval(state.aiPbarAnim);
+  let val = 0;
+  document.getElementById('ai-fill').style.width = '0%';
+  document.getElementById('ai-pbar-lbl').textContent = label + ' — 0%';
+  function step() {
+    const inc = val < 30 ? 4 : val < 60 ? 2.5 : val < 80 ? 1.2 : val < 90 ? 0.4 : 0;
+    val = Math.min(val + inc, 90);
+    document.getElementById('ai-fill').style.width = val + '%';
+    document.getElementById('ai-pbar-lbl').textContent = label + ' — ' + Math.round(val) + '%';
+    if (val < 90) state.aiPbarAnim = setTimeout(step, val < 60 ? 150 : 300);
+  }
+  state.aiPbarAnim = setTimeout(step, 150);
+}
+function progressDone(label) {
+  clearTimeout(state.aiPbarAnim);
+  document.getElementById('ai-fill').style.width = '100%';
+  document.getElementById('ai-pbar-lbl').textContent = (label || 'Done') + ' — 100% ✓';
+  setTimeout(() => {
+    document.getElementById('ai-fill').style.width = '0%';
+    document.getElementById('ai-pbar-lbl').textContent = 'Idle';
+  }, 3000);
+}
+function progressError() {
+  clearTimeout(state.aiPbarAnim);
+  document.getElementById('ai-fill').style.width = '0%';
+  document.getElementById('ai-pbar-lbl').textContent = 'Error ✗';
+  setTimeout(() => document.getElementById('ai-pbar-lbl').textContent = 'Idle', 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Question generation
+// ══════════════════════════════════════════════════════════════
+function setQtype(btn) {
+  document.querySelectorAll('.qtype-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.qtype = btn.dataset.type;
+}
+
+function generateQuestion() {
+  if (!state.ready) return;
+  const cv = document.getElementById('cv-text').value;
+  const jd = document.getElementById('jd-text').value;
+  if (cv === CV_PH && jd === JD_PH) { alert('Paste your CV and Job Description first.'); return; }
+  setStatus('Generating question…', 'busy');
+  progressStart('Generating');
+  document.getElementById('btn-gen').disabled = true;
+  document.getElementById('btn-new').disabled = true;
+  document.getElementById('q-display').textContent = 'Generating…';
+  document.getElementById('q-display').className = '';
+
+  const key = document.getElementById('inp-key').value.trim();
+  const model = document.getElementById('sel-model').value;
+  const provider = document.getElementById('sel-provider').value;
+  const qt = state.qtype;
+  const cvTxt = cv === CV_PH ? '' : cv.slice(0, 2500);
+  const jdTxt = jd === JD_PH ? '' : jd.slice(0, 2500);
+
+  callAI(key, model, provider,
+    `You are a senior recruiter. Generate ONE ${qt} interview question tailored to this candidate. Output ONLY the question.`,
+    `CV:\n${cvTxt}\n\nJob Description:\n${jdTxt}`,
+    200
+  ).then(q => {
+    state.question = q.trim();
+    const qdis = document.getElementById('q-display');
+    qdis.textContent = state.question;
+    qdis.className = 'has-q';
+    appendFeedback('<div class="fb-question-label">QUESTION</div><div class="fb-question-text">' + escHtml(state.question) + '</div><hr class="fb-divider"/>');
+    progressDone('Question ready');
+    setStatus('Question generated — start recording your answer', 'ready');
+    document.getElementById('btn-gen').disabled = false;
+    document.getElementById('btn-new').disabled = false;
+    setWorkflowStep(2);
+  }).catch(err => {
+    document.getElementById('q-display').textContent = 'Error: ' + err.message;
+    document.getElementById('btn-gen').disabled = false;
+    document.getElementById('btn-new').disabled = false;
+    progressError();
+    setStatus('Error: ' + err.message, 'idle');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Simulate feedback (web mode)
+// ══════════════════════════════════════════════════════════════
+const SAMPLE_ANSWERS = [
+  "I led a cross-functional team to deliver a major product migration under a tight deadline. I coordinated daily standups, removed blockers, and we shipped on time.",
+  "In a previous role I identified a performance bottleneck in our data pipeline, reduced query time by 60% through indexing and caching strategies.",
+  "When I joined, the team lacked clear OKRs. I introduced a quarterly goal-setting framework which improved delivery predictability by 40%.",
+];
+let _sampleIdx = 0;
+
+function simulateFeedback() {
+  const key = document.getElementById('inp-key').value.trim();
+  const model = document.getElementById('sel-model').value;
+  const provider = document.getElementById('sel-provider').value;
+  const transcript = SAMPLE_ANSWERS[_sampleIdx % SAMPLE_ANSWERS.length]; _sampleIdx++;
+
+  appendFeedback('<div class="fb-you-label">YOU (transcript)</div><div class="fb-transcript">' + escHtml(transcript) + '</div>');
+
+  const reviewSys = `You are an expert interview coach. Evaluate the answer against the question, CV and job description.\n\nReply in this EXACT plain-text format:\n\nSCORE: [0-100]/100\n\nSTRENGTHS:\n- point\n- point\n\nIMPROVEMENTS:\n- point\n- point\n\nIDEAL ANSWER:\n[2-3 sentence model answer]`;
+  const cvTxt = document.getElementById('cv-text').value;
+  const usr = `Question: ${state.question}\n\nAnswer: ${transcript}\n\nCV:\n${cvTxt === CV_PH ? '' : cvTxt.slice(0,1000)}`;
+
+  callAI(key, model, provider, reviewSys, usr, 800).then(raw => {
+    renderFeedback(raw, transcript);
+    progressDone('Feedback ready');
+    setStatus('Feedback ready', 'ready');
+    setWorkflowStep(4);
+  }).catch(err => {
+    appendFeedback('<div style="color:var(--err)">Feedback error: ' + escHtml(err.message) + '</div>');
+    progressError();
+    setStatus('Feedback error: ' + err.message, 'idle');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AI call (Gemini / OpenAI-compatible)
+// ══════════════════════════════════════════════════════════════
+async function callAI(key, model, provider, sysPrompt, userPrompt, maxTokens) {
+  if (!key) throw new Error('API key is missing.');
+
+  if (provider === 'Google Gemini') {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const body = { contents: [{ parts: [{ text: sysPrompt + '\n\n' + userPrompt }] }] };
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || r.statusText); }
+    const d = await r.json();
+    return d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  } else {
+    const baseUrl = provider === 'Perplexity' ? 'https://api.perplexity.ai' : (document.getElementById('inp-url')?.value || 'https://api.openai.com/v1');
+    const url = baseUrl.replace(/\/$/, '') + '/chat/completions';
+    const body = { model, messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }], max_tokens: maxTokens };
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }, body: JSON.stringify(body) });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || r.statusText); }
+    const d = await r.json();
+    return d?.choices?.[0]?.message?.content || '';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Render feedback
+// ══════════════════════════════════════════════════════════════
+function renderFeedback(raw, transcript) {
+  let html = '<div class="fb-ai-label">AI COACH</div>';
+  let section = null;
+  let score = null;
+  for (const line of raw.split('\n')) {
+    const s = line.trim(); if (!s) continue;
+    if (s.toUpperCase().startsWith('SCORE:')) {
+      const m = s.match(/(\d+)/); score = m ? parseInt(m[1]) : null;
+      const cls = score === null ? 'score-mid' : score >= 70 ? 'score-high' : score >= 40 ? 'score-mid' : 'score-low';
+      const ring = score !== null ? buildScoreRing(score) : '';
+      html += `<div class="fb-score-line ${cls}">${ring} Score: ${score !== null ? score + '/100' : s}</div>`;
+      continue;
     }
-    tick();
-    // auto-stop after 5s
-    setTimeout(()=>{
-      if(testStream){testStream.getTracks().forEach(t=>t.stop());testStream=null;}
-      cancelAnimationFrame(testAnimFrame);
-      updateMeter(headerMeter,headerMeterPct,0);
-      testMicBtn.textContent="🔊 Test Mic";
-      ctx.close();
-      S.micTested=true;
-      advanceStage(1);
-    },5000);
-  }catch(e){
-    showMicError("Mic test failed: "+e.message);
+    let hit = false;
+    for (const hdr of ['STRENGTHS:','IMPROVEMENTS:','IDEAL ANSWER:']) {
+      if (s.toUpperCase().startsWith(hdr)) {
+        section = hdr.replace(':','');
+        html += `<div class="fb-header">${cap(section)}</div>`;
+        const rest = s.slice(hdr.length).trim();
+        if (rest) html += `<div class="${fbClass(section)}">${escHtml(rest)}</div>`;
+        hit = true; break;
+      }
+    }
+    if (!hit) html += `<div class="${fbClass(section)}">${escHtml(s)}</div>`;
   }
+  html += '<hr class="fb-divider"/>';
+
+  const markId = 'qa_' + (state.qaHistory.length + 1) + '_start';
+  appendFeedback(html, markId);
+
+  state.qaHistory.push({ n: state.qaHistory.length + 1, q: state.question, a: transcript, raw, score: score || '', markId });
+  updateNavCb();
+  scrollFbToEnd();
 }
-testMicBtn.addEventListener("click",testMic);
 
-// ─── GO READY ────────────────────────────────────────────
-goReadyBtn.addEventListener("click",()=>{
-  if(!S.apiKey&&!S.openaiKey){alert("Please enter your API key first.");return;}
-  S.ready=true;
-  goReadyBtn.classList.add("active");
-  goReadyBtn.textContent="✓ Ready";
-  goReadyBtn.disabled=true;
-  statusPill.classList.add("ready");
-  statusPillText.textContent="READY";
-  setWorkflowEnabled(true);
-  advanceStage(0);
-});
-
-// ─── CV / JD BADGES ─────────────────────────────────────
-function updateBadge(el,text,hasContent){
-  el.textContent=hasContent?"✓ Ready":"Empty";
-  el.className="badge "+(hasContent?"badge-green":"badge-muted");
+function fbClass(section) {
+  if (!section) return 'fb-body';
+  if (section === 'STRENGTHS') return 'fb-good';
+  if (section === 'IMPROVEMENTS') return 'fb-imp';
+  return 'fb-body';
 }
-cvText.addEventListener("input",()=>{
-  updateBadge(cvBadge,"",cvText.value.trim().length>50);
-  if(cvText.value.trim().length>50)advanceStage(2);
-});
-jdText.addEventListener("input",()=>{
-  updateBadge(jdBadge,"",jdText.value.trim().length>50);
-  if(jdText.value.trim().length>50)advanceStage(3);
-});
+function cap(s) { return s.charAt(0) + s.slice(1).toLowerCase(); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-cvFileBtn.addEventListener("click",()=>cvFileInput.click());
-jdFileBtn.addEventListener("click",()=>jdFileInput.click());
-cvClearBtn.addEventListener("click",()=>{cvText.value="";updateBadge(cvBadge,"",false);});
-jdClearBtn.addEventListener("click",()=>{jdText.value="";updateBadge(jdBadge,"",false);});
-async function loadTxt(input,textarea,badge){
-  const f=input.files[0];if(!f)return;
-  textarea.value=await f.text();
-  updateBadge(badge,"",textarea.value.trim().length>50);
-  input.value="";
+// ══════════════════════════════════════════════════════════════
+//  Score ring SVG
+// ══════════════════════════════════════════════════════════════
+function buildScoreRing(score) {
+  const r = 14, cx = 16, cy = 16;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 100) * circ;
+  const color = score >= 70 ? 'var(--ok)' : score >= 40 ? 'var(--warn)' : 'var(--err)';
+  return `<span class="score-ring-wrap"><svg width="32" height="32" viewBox="0 0 32 32">
+    <circle class="score-ring-track" cx="${cx}" cy="${cy}" r="${r}"/>
+    <circle class="score-ring-arc" cx="${cx}" cy="${cy}" r="${r}" stroke="${color}"
+      stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
+      style="transform:rotate(-90deg);transform-origin:${cx}px ${cy}px"
+      data-target="${offset}"/>
+    <text class="score-ring-text" x="${cx}" y="${cy}" style="fill:${color};font-size:9px">${score}</text>
+  </svg></span>`;
 }
-cvFileInput.addEventListener("change",()=>{loadTxt(cvFileInput,cvText,cvBadge).then(()=>{if(cvText.value.trim().length>50)advanceStage(2);});});
-jdFileInput.addEventListener("change",()=>{loadTxt(jdFileInput,jdText,jdBadge).then(()=>{if(jdText.value.trim().length>50)advanceStage(3);});});
 
-// ─── QUESTION TYPE PILLS ────────────────────────────────
-qtypePills.querySelectorAll(".qpill").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    S.qtype=btn.dataset.q;
-    qtypePills.querySelectorAll(".qpill").forEach(p=>p.classList.toggle("active",p===btn));
-  });
-});
-
-// ─── GENERATE QUESTION ──────────────────────────────────
-genQBtn.addEventListener("click",async()=>{
-  if(!S.apiKey){alert("Add your "+S.provider+" API key first.");return;}
-  setBusy(true);
-  questionDisplay.classList.add("empty");
-  questionDisplay.textContent="⟳ Generating question...";
-  const cv=cvText.value.trim()||"(not provided)";
-  const jd=jdText.value.trim()||"(not provided)";
-  const prompt=`You are a hiring manager. Generate ONE concise ${S.qtype} interview question tailored to this candidate's CV and the job description.\n\nCV:\n${cv}\n\nJob Description:\n${jd}\n\nRespond with only the question itself, no preamble.`;
-  try{
-    let q;
-    if(S.provider==="Google Gemini")q=await callGemini(S.model,S.apiKey,prompt);
-    else q=await callCompat(S.provider,S.model,S.apiKey,"You are a hiring manager.",prompt);
-    questionDisplay.textContent=q.trim();
-    questionDisplay.classList.remove("empty");
-    advanceStage(4);
-  }catch(e){
-    questionDisplay.textContent="Error: "+e.message;
-  }
-  setBusy(false);
-});
-
-// ─── RECORDING ──────────────────────────────────────────
-function updateMeter(fill,pctEl,pct){
-  fill.style.width=pct+"%";
-  fill.style.background=pct>80?"var(--danger)":pct>50?"var(--warning)":"var(--accent)";
-  pctEl.textContent=Math.round(pct)+"%";
-}
-function showMicError(msg){micError.innerHTML="<strong>Mic issue:</strong> "+msg;micError.classList.remove("hidden");}
-function hideMicError(){micError.classList.add("hidden");}
-function startTimer(){S.elapsed=0;timerInterval=setInterval(()=>{S.elapsed++;const m=String(Math.floor(S.elapsed/60)).padStart(2,"0"),s=String(S.elapsed%60).padStart(2,"0");timerDisplay.textContent=m+":"+s;},1000);}
-function stopTimer(){clearInterval(timerInterval);timerDisplay.textContent="00:00";}
-function setWave(on){wbars.forEach(b=>b.classList.toggle("active",on));}
-
-async function startRecording(){
-  hideMicError();audioChunks=[];
-  let stream;
-  try{
-    const did=micSel.value;
-    stream=await navigator.mediaDevices.getUserMedia({audio:did&&did!=="default"?{deviceId:{exact:did}}:true});
-  }catch(err){
-    const msg=err.name==="NotAllowedError"?"Mic blocked — allow microphone access and refresh.":"Mic error: "+err.message;
-    showMicError(msg);return;
-  }
-  audioCtx=new AudioContext();
-  const src=audioCtx.createMediaStreamSource(stream);
-  analyserNode=audioCtx.createAnalyser();analyserNode.fftSize=256;
-  src.connect(analyserNode);
-  const buf=new Uint8Array(analyserNode.frequencyBinCount);
-  function tick(){analyserNode.getByteFrequencyData(buf);const avg=buf.reduce((a,b)=>a+b,0)/buf.length/70;updateMeter(recMeter,recMeterPct,Math.min(avg,1)*100);updateMeter(headerMeter,headerMeterPct,Math.min(avg,1)*100);animFrame=requestAnimationFrame(tick);}
-  tick();
-  const mime=["audio/webm;codecs=opus","audio/webm","audio/ogg","audio/mp4"].find(m=>MediaRecorder.isTypeSupported(m))||"";
-  mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:{});
-  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
-  mediaRecorder.onstop=()=>{
-    cancelAnimationFrame(animFrame);
-    updateMeter(recMeter,recMeterPct,0);
-    updateMeter(headerMeter,headerMeterPct,0);
-    if(audioCtx){audioCtx.close();audioCtx=null;}
-    stream.getTracks().forEach(t=>t.stop());
-    setWave(false);
-    const blob=new Blob(audioChunks,{type:mime||"audio/webm"});
-    advanceStage(5);
-    processAudio(blob);
-  };
-  mediaRecorder.start(200);
-  S.recording=true;startTimer();setWave(true);
-  startRecBtn.classList.add("hidden");
-  stopRecBtn.classList.remove("hidden");stopRecBtn.disabled=false;
-  recCard.classList.add("recording-active");
-  recStatus.textContent="Recording...";
-}
-function stopRecording(){
-  if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();
-  S.recording=false;stopTimer();
-  stopRecBtn.classList.add("hidden");
-  startRecBtn.classList.remove("hidden");
-  recCard.classList.remove("recording-active");
-  recStatus.textContent="Processing audio...";
-}
-startRecBtn.addEventListener("click",startRecording);
-stopRecBtn.addEventListener("click",stopRecording);
-openFolderBtn.addEventListener("click",()=>alert("Session folder: "+S.folder+"\n\n(In a browser context, file system access is limited. Use the desktop app to open folders.)"));
-
-// ─── TABS ─────────────────────────────────────────────────
-document.querySelectorAll(".tab-btn").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
-    btn.classList.add("active");
-    $("tab-"+btn.dataset.tab).classList.add("active");
-  });
-});
-
-// ─── PROGRESS TRACKER ───────────────────────────────────
-function advanceStage(idx){
-  if(S.stages[idx])return;
-  S.stages[idx]=true;
-  const done=S.stages.filter(Boolean).length;
-  const pct=Math.round(done/8*100);
-  progFill.style.width=pct+"%";
-  progressPct.textContent=pct+"%";
-  currentStageText.textContent=STAGE_MSGS[idx]||"";
-  document.querySelectorAll(".chk-item").forEach(el=>{
-    const i=+el.dataset.stage;
-    el.classList.remove("done","active-stage");
-    if(S.stages[i])el.classList.add("done");
-    else if(i===idx+1&&!S.stages[i])el.classList.add("active-stage");
+// Animate rings after they enter the DOM
+function animateRings() {
+  document.querySelectorAll('.score-ring-arc[data-target]').forEach(el => {
+    const target = parseFloat(el.getAttribute('data-target'));
+    if (!el.dataset.animated) {
+      el.dataset.animated = '1';
+      setTimeout(() => { el.style.strokeDashoffset = target; }, 50);
+    }
   });
 }
 
-// ─── COPY / CLEAR ────────────────────────────────────────
-copyBtn.addEventListener("click",()=>{
-  const panel=$("tab-transcript");const t=panel.innerText;
-  navigator.clipboard.writeText(t).catch(()=>{});
-});
-clearBtn.addEventListener("click",()=>{
-  $("tab-transcript").innerHTML='<div class="empty-state" id="transcriptEmpty"><div class="empty-icon">🎙</div><p>Your transcribed answer will appear here after recording.</p></div>';
-  $("tab-feedback").innerHTML='<div class="empty-state" id="feedbackEmpty"><div class="empty-icon">💡</div><p>AI coaching feedback will appear here after transcription.</p></div>';
-  S.transcriptEntries=[];S.feedbackEntries=[];
-});
-
-// ─── HELPERS ────────────────────────────────────────────
-function setBusy(b){S.busy=b;spinner.classList.toggle("hidden",!b);}
-function escHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function renderMd(raw){
-  let s=escHtml(raw);
-  s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
-  s=s.replace(/^### (.+)$/gm,"<h4 style='margin-top:.6rem;font-size:.85rem;color:var(--accent2)'>$1</h4>");
-  s=s.replace(/^## (.+)$/gm,"<h3 style='margin-top:.6rem;font-size:.9rem'>$1</h3>");
-  s=s.replace(/`([^`]+)`/g,"<code style='font-family:var(--font-mono);background:var(--panel);padding:.1rem .3rem;border-radius:3px'>$1</code>");
-  s=s.replace(/^[-*] (.+)$/gm,"<li style='margin-left:1rem;list-style:disc'>$1</li>");
-  s=s.replace(/^(\d+)\. (.+)$/gm,"<li style='margin-left:1rem'>$2</li>");
-  s=s.replace(/(<li[\s\S]*?<\/li>\n?)+/g,m=>"<ul style='margin:.4rem 0'>"+m+"</ul>");
-  s=s.replace(/\n\n/g,"</p><p style='margin-top:.5rem'>").replace(/\n/g,"<br/>");
-  return "<p>"+s+"</p>";
+// ══════════════════════════════════════════════════════════════
+//  Feedback box helpers
+// ══════════════════════════════════════════════════════════════
+function appendFeedback(html, markId) {
+  const fb = document.getElementById('feedback-box');
+  const placeholder = fb.querySelector('.placeholder');
+  if (placeholder) placeholder.remove();
+  const div = document.createElement('div');
+  if (markId) div.id = markId;
+  div.innerHTML = html;
+  fb.appendChild(div);
+  animateRings();
+  scrollFbToEnd();
 }
-function addToTab(tabId,html){
-  const panel=$("tab-"+tabId);
-  // remove empty state if present
-  const emp=panel.querySelector(".empty-state");
-  if(emp)emp.remove();
-  const div=document.createElement("div");div.className="fade-up";
-  div.innerHTML=html;
-  panel.appendChild(div);
-  panel.scrollTop=panel.scrollHeight;
-  // switch to that tab
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tabId));
-  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tabId));
+function clearFeedbackBox() {
+  document.getElementById('feedback-box').innerHTML = '<span class="placeholder">Your AI feedback will appear here after each answer…</span>';
+}
+function scrollFbToEnd() { const fb = document.getElementById('feedback-box'); fb.scrollTop = fb.scrollHeight; }
+function copyFeedback() {
+  const text = document.getElementById('feedback-box').innerText;
+  navigator.clipboard.writeText(text).then(() => setStatus('Feedback copied to clipboard', 'ready')).catch(() => {});
+}
+function clearSession() {
+  clearFeedbackBox(); state.qaHistory = []; state.question = '';
+  document.getElementById('q-display').textContent = "Click 'Generate Question' to begin...";
+  document.getElementById('q-display').className = '';
+  resetNavCb(); setWorkflowStep(1);
+  setStatus('Session cleared.', 'ready');
 }
 
-// ─── API CALLS ──────────────────────────────────────────
-async function transcribeAudio(blob,key){
-  const form=new FormData();
-  form.append("file",blob,"rec.webm");
-  form.append("model","whisper-1");
-  form.append("language","en");
-  const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:"Bearer "+key},body:form});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||"Whisper "+r.status);}
-  return(await r.json()).text?.trim()||"";
+// ══════════════════════════════════════════════════════════════
+//  Nav Q&A
+// ══════════════════════════════════════════════════════════════
+function updateNavCb() {
+  const cb = document.getElementById('nav-cb');
+  cb.innerHTML = state.qaHistory.map((e,i) => `<option value="${i}">Q${e.n}: [${e.score}] ${e.q.slice(0,65)}…</option>`).join('');
+  cb.value = String(state.qaHistory.length - 1);
 }
-async function callGemini(model,key,prompt){
-  const url="https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent?key="+key;
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200}})});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||"Gemini "+r.status);}
-  return(await r.json()).candidates?.[0]?.content?.parts?.[0]?.text||"No response";
+function resetNavCb() {
+  document.getElementById('nav-cb').innerHTML = '<option value="">— no history —</option>';
 }
-async function callCompat(provider,model,key,sys,usr){
-  const base=provider==="Perplexity"?"https://api.perplexity.ai":"https://api.openai.com/v1";
-  const r=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+key},body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:usr}],max_tokens:1200})});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||"API "+r.status);}
-  return(await r.json()).choices?.[0]?.message?.content||"No response";
+function jumpToQA() {
+  const i = parseInt(document.getElementById('nav-cb').value);
+  if (!isNaN(i) && state.qaHistory[i]) {
+    const el = document.getElementById(state.qaHistory[i].markId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
-async function getFeedback(transcript){
-  const cv=cvText.value.trim()||"(not provided)",jd=jdText.value.trim()||"(not provided)";
-  const q=questionDisplay.textContent||"";
-  const sys="You are an expert interview coach. Give structured, specific, actionable feedback using the STAR framework.";
-  const usr=`## Candidate CV\n${cv}\n\n## Job Description\n${jd}\n\n## Question\n${q}\n\n## Candidate Answer\n${transcript}\n\nProvide:\n1. **STAR Score** (x/10) with brief justification\n2. **Strengths** — 2-3 bullets\n3. **Improvements** — 2-3 bullets\n4. **Suggested Reframe** — a concise improved version\n5. **JD Keywords** to weave in next time`;
-  if(S.provider==="Google Gemini")return callGemini(S.model,S.apiKey,sys+"\n\n"+usr);
-  return callCompat(S.provider,S.model,S.apiKey,sys,usr);
+function navPrev() {
+  const cb = document.getElementById('nav-cb');
+  const i = parseInt(cb.value); if (i > 0) { cb.value = i - 1; jumpToQA(); }
 }
-async function processAudio(blob){
-  setBusy(true);
-  const whisperKey=S.provider==="OpenAI"?S.apiKey:S.openaiKey;
-  if(!whisperKey){
-    addToTab("transcript",'<div class="error-box">OpenAI API key needed for Whisper transcription. Add it in the header.</div>');
-    setBusy(false);recStatus.textContent="Missing OpenAI key";return;
-  }
-  if(!S.apiKey){
-    addToTab("feedback",'<div class="error-box">'+S.provider+' API key needed. Add it in the header.</div>');
-    setBusy(false);return;
-  }
-  recStatus.textContent="Transcribing...";
-  let transcript;
-  try{
-    transcript=await transcribeAudio(blob,whisperKey);
-    if(!transcript)throw new Error("No speech detected.");
-    addToTab("transcript",'<div class="entry-transcript"><span class="tag tag-you">You said</span><p style="font-size:.88rem;line-height:1.65;font-style:italic;margin-top:6px">'+escHtml(transcript)+'</p></div>');
-    advanceStage(6);
-  }catch(err){
-    addToTab("transcript",'<div class="error-box">Transcription failed: '+escHtml(err.message)+'</div>');
-    setBusy(false);recStatus.textContent="Error";return;
-  }
-  recStatus.textContent="Getting AI feedback...";
-  try{
-    const fb=await getFeedback(transcript);
-    addToTab("feedback",'<div class="entry-feedback"><span class="tag tag-ai">AI Feedback</span><div style="margin-top:6px;font-size:.85rem">'+renderMd(fb)+'</div></div>');
-    advanceStage(7);
-    // add to history
-    const q=questionDisplay.textContent||"-";
-    const now=new Date().toLocaleTimeString();
-    const hi=document.createElement("div");hi.className="hist-item fade-up";
-    hi.innerHTML='<div class="hi-q">'+escHtml(q.slice(0,100))+'...</div><div style="font-size:.8rem;color:var(--muted);margin-top:.25rem">'+escHtml(transcript.slice(0,80))+'...</div><div class="hi-meta">'+now+' · '+S.qtype+'</div>';
-    const hp=$("tab-history");const he=hp.querySelector(".empty-state");if(he)he.remove();
-    hp.insertBefore(hi,hp.firstChild);
-    recStatus.textContent="Done — record again to practice more";
-  }catch(err){
-    addToTab("feedback",'<div class="error-box">AI feedback failed: '+escHtml(err.message)+'</div>');
-    recStatus.textContent="Error";
-  }
-  setBusy(false);
+function navNext() {
+  const cb = document.getElementById('nav-cb');
+  const i = parseInt(cb.value);
+  if (i < state.qaHistory.length - 1) { cb.value = i + 1; jumpToQA(); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════════════════════
+setBottomEnabled(false);
+setWorkflowStep(1);
+
+// Detect if MediaRecorder available and show note
+if (!window.MediaRecorder) {
+  document.getElementById('backend-lbl').textContent = 'No Recording API';
+  document.getElementById('backend-lbl').style.color = 'var(--err)';
+} else {
+  document.getElementById('backend-lbl').textContent = 'Web Mode (MediaRecorder)';
+  document.getElementById('backend-lbl').style.color = 'var(--warn)';
 }
 </script>
 </body>
