@@ -1,16 +1,321 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interview Prep Assistant</title>
-    <meta name="description" content="AI-powered interview practice — record your answer, get instant coaching feedback." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Interview Prep Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--panel:#21262d;--border:#30363d;
+  --accent:#2ea043;--accent2:#58a6ff;--danger:#f85149;
+  --text:#e6edf3;--muted:#8b949e;--radius:10px;
+  --font-body:"Inter",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+button{cursor:pointer;font-family:inherit;font-size:.875rem;font-weight:500;border:none;border-radius:var(--radius);padding:.5rem 1rem;transition:opacity .15s,background .15s,transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+textarea,input,select{font-family:var(--font-body);font-size:.875rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .75rem;outline:none;width:100%;transition:border-color .15s}
+textarea:focus,input:focus,select:focus{border-color:var(--accent2)}
+textarea{resize:vertical;line-height:1.6}
+label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
+.header{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.25rem;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.header-title{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;color:var(--accent2)}
+.main-grid{display:grid;grid-template-columns:360px 1fr;gap:1rem;padding:1rem 1.25rem;align-items:start}
+@media(max-width:768px){.main-grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:.75rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;display:flex;flex-direction:column;gap:.75rem}
+.card-title{font-size:.82rem;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em}
+.btn-sm{background:var(--panel);color:var(--text);padding:.28rem .6rem;font-size:.75rem;border-radius:var(--radius)}
+.btn-primary{background:var(--accent);color:#fff;font-weight:700}
+.btn-danger{background:var(--danger);color:#fff;font-weight:700}
+.pill{border-radius:20px;padding:.26rem .7rem;font-size:.76rem;font-weight:600;background:var(--panel);color:var(--text);border:none}
+.pill.active{background:var(--accent2);color:#000}
+.meter-track{flex:1;height:9px;background:var(--panel);border-radius:5px;overflow:hidden}
+.meter-fill{height:100%;border-radius:5px;transition:width .06s linear,background .15s;width:0%}
+.error-box{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:.6rem .8rem;font-size:.8rem;color:var(--danger);line-height:1.5}
+.feedback-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem;min-height:350px;max-height:600px}
+.entry-transcript{border-left:3px solid var(--border);padding-left:.85rem}
+.entry-feedback{border-left:3px solid var(--accent2);padding-left:.85rem}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.12rem .45rem;border-radius:4px}
+.tag-you{background:#30363d;color:#8b949e}
+.tag-ai{background:rgba(88,166,255,.12);color:var(--accent2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.fade-up{animation:fadeUp .28s ease both}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.5)}50%{box-shadow:0 0 0 8px rgba(248,81,73,0)}}
+.rec-pulse{animation:recPulse 1.2s ease infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.settings-drawer{position:fixed;top:54px;right:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:.7rem}
+.hidden{display:none!important}
+.row{display:flex;align-items:center;gap:8px}
+.timer{font-family:var(--font-mono);font-size:1.25rem;color:var(--accent2);min-width:52px}
+.status-text{flex:1;font-size:.78rem;color:var(--muted)}
+.empty-state{color:var(--muted);text-align:center;margin-top:3rem;line-height:1.7;font-size:.875rem}
+.empty-icon{font-size:2rem;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-title">
+    <span>&#127908;</span>
+    <span>Interview Prep Assistant</span>
+    <span id="spinner" class="spin hidden" style="font-size:1rem;color:var(--muted);margin-left:8px">&#10227;</span>
+  </div>
+  <div style="position:relative">
+    <button class="btn-sm" id="settingsBtn">&#9881; Settings</button>
+    <div class="settings-drawer hidden" id="settingsDrawer">
+      <div class="row" style="justify-content:space-between">
+        <span style="font-weight:700;font-size:.85rem;color:var(--accent2)">API Settings</span>
+        <button id="settingsClose" style="background:none;color:var(--muted);padding:.15rem .4rem">&#10005;</button>
+      </div>
+      <div>
+        <label>AI Provider</label>
+        <select id="providerSel">
+          <option>Google Gemini</option>
+          <option>OpenAI</option>
+          <option>Perplexity</option>
+        </select>
+      </div>
+      <div>
+        <label>Model</label>
+        <select id="modelSel"></select>
+      </div>
+      <div id="openaiKeyWrap">
+        <label>OpenAI Key <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(Whisper transcription)</span></label>
+        <input type="password" id="openaiKeyInput" placeholder="sk-"/>
+      </div>
+      <div>
+        <label id="providerKeyLabel">Google Gemini Key</label>
+        <input type="password" id="providerKeyInput" placeholder="AIza"/>
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">&#128274; Keys stay in this browser tab only - never sent anywhere except directly to the AI provider.</p>
+    </div>
+  </div>
+</header>
+
+<main class="main-grid">
+  <div class="col">
+    <div class="card">
+      <div class="row">
+        <span class="card-title" style="flex:1">&#128196; CV / Resume</span>
+        <button class="btn-sm" id="cvFileBtn">&#128194; .txt</button>
+        <button class="btn-sm" id="cvClearBtn">&#128465;</button>
+        <input type="file" id="cvFileInput" accept=".txt" style="display:none"/>
+      </div>
+      <textarea id="cvText" rows="9" placeholder="Paste your CV / Resume here..." style="font-size:.82rem"></textarea>
+    </div>
+    <div class="card">
+      <div class="row">
+        <span class="card-title" style="flex:1">&#128188; Job Description</span>
+        <button class="btn-sm" id="jdFileBtn">&#128194; .txt</button>
+        <button class="btn-sm" id="jdClearBtn">&#128465;</button>
+        <input type="file" id="jdFileInput" accept=".txt" style="display:none"/>
+      </div>
+      <textarea id="jdText" rows="9" placeholder="Paste the Job Description here..." style="font-size:.82rem"></textarea>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <span class="card-title">&#127897; Voice Recording</span>
+      <div>
+        <label>&#128266; Microphone Input</label>
+        <select id="micSel"><option value="default">Default microphone</option></select>
+        <p style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.5">To switch mic: click the lock icon in address bar &rarr; Site settings &rarr; Microphone</p>
+      </div>
+      <div>
+        <label>Question Type</label>
+        <div class="row" style="flex-wrap:wrap;margin-top:4px;gap:6px" id="qtypePills">
+          <button class="pill active" data-q="Behavioral">Behavioral</button>
+          <button class="pill" data-q="Technical">Technical</button>
+          <button class="pill" data-q="Situational">Situational</button>
+          <button class="pill" data-q="Motivation">Motivation</button>
+        </div>
+      </div>
+      <div>
+        <label>Custom Question <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="customQ" placeholder="e.g. Tell me about a time you led a project..."/>
+      </div>
+      <div class="row">
+        <span style="font-size:.72rem;color:var(--muted);min-width:60px">Mic level</span>
+        <div class="meter-track"><div class="meter-fill" id="meterFill"></div></div>
+        <span style="font-size:.72rem;color:var(--muted);min-width:30px;text-align:right" id="meterPct">0%</span>
+      </div>
+      <div id="micErrorBox" class="error-box hidden"></div>
+      <div class="row">
+        <span class="timer" id="timerDisplay">00:00</span>
+        <span class="status-text" id="statusText">Ready - configure API key in Settings first</span>
+        <button id="recBtn" class="btn-primary" style="font-size:.88rem;padding:.55rem 1.1rem">&#9210; Start Recording</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="flex-shrink:0;margin-bottom:.25rem">
+        <span class="card-title" style="flex:1">&#128203; Transcript &amp; Feedback</span>
+        <button class="btn-sm" id="copyBtn">&#128203; Copy</button>
+        <button class="btn-sm" id="clearBtn">&#128465; Clear</button>
+      </div>
+      <div class="feedback-area" id="feedbackArea">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">&#127897;</div>
+          <p>Record your answer and get instant AI coaching feedback.</p>
+          <p style="margin-top:6px;font-size:.75rem">Configure your API key in Settings first.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const PROVIDERS={
+  "Google Gemini":["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-2.0-flash"],
+  "OpenAI":["gpt-4o-mini","gpt-4o","gpt-4-turbo"],
+  "Perplexity":["sonar","sonar-pro"]
+};
+let state={provider:"Google Gemini",model:"gemini-2.5-flash",apiKey:"",openaiKey:"",qtype:"Behavioral",recording:false,busy:false,elapsed:0,entries:[]};
+let mediaRecorder=null,audioChunks=[],audioCtx=null,animFrame=null,timerInterval=null;
+const $=id=>document.getElementById(id);
+const settingsBtn=$("settingsBtn"),settingsDrawer=$("settingsDrawer"),settingsClose=$("settingsClose");
+const providerSel=$("providerSel"),modelSel=$("modelSel"),openaiKeyWrap=$("openaiKeyWrap"),openaiKeyInput=$("openaiKeyInput"),providerKeyLabel=$("providerKeyLabel"),providerKeyInput=$("providerKeyInput");
+const cvText=$("cvText"),jdText=$("jdText"),cvFileBtn=$("cvFileBtn"),jdFileBtn=$("jdFileBtn"),cvClearBtn=$("cvClearBtn"),jdClearBtn=$("jdClearBtn"),cvFileInput=$("cvFileInput"),jdFileInput=$("jdFileInput");
+const micSel=$("micSel"),qtypePills=$("qtypePills"),customQ=$("customQ"),meterFill=$("meterFill"),meterPct=$("meterPct"),micErrorBox=$("micErrorBox"),recBtn=$("recBtn"),timerDisplay=$("timerDisplay"),statusText=$("statusText"),feedbackArea=$("feedbackArea"),emptyState=$("emptyState"),copyBtn=$("copyBtn"),clearBtn=$("clearBtn"),spinner=$("spinner");
+
+function populateModels(){modelSel.innerHTML="";(PROVIDERS[state.provider]||[]).forEach(m=>{const o=document.createElement("option");o.value=o.textContent=m;if(m===state.model)o.selected=true;modelSel.appendChild(o);});}
+function syncSettingsUI(){providerSel.value=state.provider;populateModels();providerKeyLabel.textContent=state.provider+" Key";providerKeyInput.placeholder=state.provider==="Google Gemini"?"AIza...":"sk-...";providerKeyInput.value=state.apiKey;openaiKeyInput.value=state.openaiKey;openaiKeyWrap.classList.toggle("hidden",state.provider==="OpenAI");}
+settingsBtn.addEventListener("click",()=>{settingsDrawer.classList.toggle("hidden");syncSettingsUI();});
+settingsClose.addEventListener("click",()=>settingsDrawer.classList.add("hidden"));
+document.addEventListener("click",e=>{if(!settingsDrawer.contains(e.target)&&e.target!==settingsBtn)settingsDrawer.classList.add("hidden");});
+providerSel.addEventListener("change",()=>{state.provider=providerSel.value;state.model=(PROVIDERS[state.provider]||[])[0]||"";syncSettingsUI();});
+modelSel.addEventListener("change",()=>{state.model=modelSel.value;});
+providerKeyInput.addEventListener("input",()=>{state.apiKey=providerKeyInput.value.trim();});
+openaiKeyInput.addEventListener("input",()=>{state.openaiKey=openaiKeyInput.value.trim();});
+syncSettingsUI();
+
+cvFileBtn.addEventListener("click",()=>cvFileInput.click());
+jdFileBtn.addEventListener("click",()=>jdFileInput.click());
+cvClearBtn.addEventListener("click",()=>cvText.value="");
+jdClearBtn.addEventListener("click",()=>jdText.value="");
+async function loadTxt(input,textarea){const f=input.files[0];if(!f)return;if(f.name.endsWith(".txt")){textarea.value=await f.text();}else alert("Please upload a .txt file.");input.value="";}
+cvFileInput.addEventListener("change",()=>loadTxt(cvFileInput,cvText));
+jdFileInput.addEventListener("change",()=>loadTxt(jdFileInput,jdText));
+
+qtypePills.querySelectorAll(".pill").forEach(btn=>{btn.addEventListener("click",()=>{state.qtype=btn.dataset.q;qtypePills.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p===btn));});});
+
+async function loadMics(){try{await navigator.mediaDevices.getUserMedia({audio:true});const all=await navigator.mediaDevices.enumerateDevices();const mics=all.filter(d=>d.kind==="audioinput");micSel.innerHTML='<option value="default">Default microphone</option>';mics.forEach(d=>{const o=document.createElement("option");o.value=d.deviceId;o.textContent=d.label||"Microphone "+d.deviceId.slice(0,8);micSel.appendChild(o);});}catch(e){showMicError("Microphone access denied - click the lock icon and allow microphone access.");}}
+loadMics();
+
+function showMicError(msg){micErrorBox.innerHTML="<strong>Mic issue:</strong> "+msg;micErrorBox.classList.remove("hidden");}
+function hideMicError(){micErrorBox.classList.add("hidden");}
+function startTimer(){state.elapsed=0;timerInterval=setInterval(()=>{state.elapsed++;const m=String(Math.floor(state.elapsed/60)).padStart(2,"0");const s=String(state.elapsed%60).padStart(2,"0");timerDisplay.textContent=m+":"+s;},1000);}
+function stopTimer(){clearInterval(timerInterval);timerDisplay.textContent="00:00";}
+function updateMeter(pct){meterFill.style.width=pct+"%";meterFill.style.background=pct>80?"var(--danger)":pct>50?"#f0a500":"var(--accent)";meterPct.textContent=Math.round(pct)+"%";}
+function setStatus(msg){statusText.textContent=msg;}
+function setBusy(b){state.busy=b;spinner.classList.toggle("hidden",!b);recBtn.disabled=b;}
+
+async function startRecording(){
+  hideMicError();audioChunks=[];
+  let stream;
+  try{const did=micSel.value;const constraints={audio:did&&did!=="default"?{deviceId:{exact:did}}:true};stream=await navigator.mediaDevices.getUserMedia(constraints);}
+  catch(err){const msg=err.name==="NotAllowedError"?"Mic blocked - click the lock icon, set Microphone to Allow, then refresh.":err.name==="NotFoundError"?"No microphone found.":"Mic error: "+err.message;showMicError(msg);return;}
+  audioCtx=new AudioContext();
+  const src=audioCtx.createMediaStreamSource(stream);
+  const analyser=audioCtx.createAnalyser();analyser.fftSize=256;
+  src.connect(analyser);
+  const buf=new Uint8Array(analyser.frequencyBinCount);
+  function tick(){analyser.getByteFrequencyData(buf);const avg=buf.reduce((a,b)=>a+b,0)/buf.length/70;updateMeter(Math.min(avg,1)*100);animFrame=requestAnimationFrame(tick);}
+  tick();
+  const mime=["audio/webm;codecs=opus","audio/webm","audio/ogg","audio/mp4"].find(m=>MediaRecorder.isTypeSupported(m))||"";
+  mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:{});
+  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+  mediaRecorder.onstop=()=>{cancelAnimationFrame(animFrame);updateMeter(0);if(audioCtx){audioCtx.close();audioCtx=null;}stream.getTracks().forEach(t=>t.stop());const blob=new Blob(audioChunks,{type:mime||"audio/webm"});processAudio(blob);};
+  mediaRecorder.start(200);
+  state.recording=true;startTimer();
+  recBtn.textContent="Stop & Analyse";
+  recBtn.classList.remove("btn-primary");recBtn.classList.add("btn-danger","rec-pulse");
+  setStatus("Recording...");
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();
+  state.recording=false;stopTimer();
+  recBtn.textContent="Start Recording";
+  recBtn.classList.remove("btn-danger","rec-pulse");recBtn.classList.add("btn-primary");
+  setStatus("Processing...");
+}
+recBtn.addEventListener("click",()=>{state.recording?stopRecording():startRecording();});
+
+function escHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function renderMd(raw){
+  let s=escHtml(raw).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>").replace(/^### (.+)$/gm,"<h3>$1</h3>").replace(/^## (.+)$/gm,"<h2>$1</h2>").replace(/^# (.+)$/gm,"<h1>$1</h1>").replace(/`([^`]+)`/g,"<code>$1</code>").replace(/^[-*] (.+)$/gm,"<li>$1</li>").replace(/^(\d+)\. (.+)$/gm,"<li>$2</li>");
+  s=s.replace(/(<li>[\s\S]*?<\/li>\n?)+/g,m=>"<ul>"+m+"</ul>");
+  s=s.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br/>");
+  return "<p>"+s+"</p>";
+}
+
+function renderEntry(entry){
+  emptyState.classList.add("hidden");
+  const div=document.createElement("div");div.className="fade-up";
+  if(entry.type==="transcript"){div.className+=" entry-transcript";div.innerHTML='<span class="tag tag-you">You said</span><p style="font-size:.9rem;line-height:1.65;font-style:italic;margin-top:6px">'+escHtml(entry.text)+'</p>';}
+  else if(entry.type==="feedback"){div.className+=" entry-feedback";div.innerHTML='<span class="tag tag-ai">AI Feedback</span><div style="margin-top:6px;font-size:.875rem">'+renderMd(entry.text)+'</div>';}
+  else if(entry.type==="info"){div.style.cssText="font-size:.78rem;color:var(--muted);padding:0 .5rem";div.textContent=entry.text;div.dataset.info="1";}
+  else if(entry.type==="error"){div.className="error-box fade-up";div.innerHTML='<strong>Error:</strong> '+escHtml(entry.text);}
+  div.dataset.eid=state.entries.length;
+  feedbackArea.appendChild(div);
+  feedbackArea.scrollTop=feedbackArea.scrollHeight;
+}
+function addEntry(type,text){state.entries.push({type,text});renderEntry({type,text});}
+function removeInfoNodes(containing){feedbackArea.querySelectorAll("[data-info='1']").forEach(el=>{if(el.textContent.includes(containing))el.remove();});}
+clearBtn.addEventListener("click",()=>{state.entries=[];feedbackArea.innerHTML="";feedbackArea.appendChild(emptyState);emptyState.classList.remove("hidden");});
+copyBtn.addEventListener("click",()=>{const t=state.entries.filter(e=>e.type!=="info").map(e=>e.type==="transcript"?"YOU SAID:\n"+e.text:e.type==="feedback"?"AI FEEDBACK:\n"+e.text:e.text).join("\n\n---\n\n");navigator.clipboard.writeText(t).catch(()=>{});});
+
+async function transcribeAudio(blob,apiKey){
+  const form=new FormData();form.append("file",blob,"recording.webm");form.append("model","whisper-1");form.append("language","en");
+  const res=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:"Bearer "+apiKey},body:form});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||"Whisper error "+res.status);}
+  return(await res.json()).text?.trim()||"";
+}
+async function callGemini(model,apiKey,prompt){
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent?key="+apiKey;
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200}})});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||"Gemini "+res.status);}
+  return(await res.json()).candidates?.[0]?.content?.parts?.[0]?.text||"No response";
+}
+async function callCompat(provider,model,apiKey,sys,usr){
+  const base=provider==="Perplexity"?"https://api.perplexity.ai":"https://api.openai.com/v1";
+  const res=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:usr}],max_tokens:1200})});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||"API "+res.status);}
+  return(await res.json()).choices?.[0]?.message?.content||"No response";
+}
+async function getFeedback(transcript){
+  const cv=cvText.value.trim()||"(not provided)";const jd=jdText.value.trim()||"(not provided)";const cq=customQ.value.trim();
+  const qHint=cq?'Custom question: "'+cq+'"':"Question type: "+state.qtype;
+  const sys="You are an expert interview coach. Give structured, specific, actionable feedback using the STAR framework.";
+  const usr="## Candidate CV\n"+cv+"\n\n## Job Description\n"+jd+"\n\n## "+qHint+"\n\n## Candidate answer\n"+transcript+"\n\nProvide:\n1. **STAR Score** (x/10) with brief justification\n2. **Strengths** - 2-3 bullets\n3. **Improvements** - 2-3 bullets\n4. **Suggested Reframe** - a concise improved version\n5. **JD Keywords** to weave in next time\n";
+  if(state.provider==="Google Gemini")return callGemini(state.model,state.apiKey,sys+"\n\n"+usr);
+  return callCompat(state.provider,state.model,state.apiKey,sys,usr);
+}
+async function processAudio(blob){
+  setBusy(true);
+  const whisperKey=state.provider==="OpenAI"?state.apiKey:state.openaiKey;
+  if(!whisperKey){addEntry("error","OpenAI API key needed for Whisper transcription. Add it in Settings.");setBusy(false);setStatus("Missing OpenAI key");return;}
+  if(!state.apiKey){addEntry("error",state.provider+" API key needed for feedback. Add it in Settings.");setBusy(false);setStatus("Missing API key");return;}
+  setStatus("Transcribing audio...");addEntry("info","Sending to Whisper...");
+  let transcript;
+  try{transcript=await transcribeAudio(blob,whisperKey);removeInfoNodes("Whisper");if(!transcript)throw new Error("No speech detected.");addEntry("transcript",transcript);}
+  catch(err){removeInfoNodes("Whisper");addEntry("error","Transcription failed: "+err.message);setBusy(false);setStatus("Error");return;}
+  setStatus("Getting AI feedback...");addEntry("info","Asking AI coach...");
+  try{const feedback=await getFeedback(transcript);removeInfoNodes("AI coach");addEntry("feedback",feedback);setStatus("Done - record again to practice more");}
+  catch(err){removeInfoNodes("AI coach");addEntry("error","AI feedback failed: "+err.message);setStatus("Error");}
+  finally{setBusy(false);}
+}
+</script>
+</body>
 </html>
