@@ -1,95 +1,63 @@
-# Interview Prep App — Web Version 🎤
+# 🎤 Interview Prep Assistant
 
-Full-stack web app: React frontend + Flask/Whisper backend.
-Record your interview answer in the browser → AI coaching feedback instantly.
+AI-powered interview practice — record your answer in the browser, get instant coaching feedback.
+**No server. No installation. Just open the link.**
 
----
-
-## Architecture
-
-```
-browser (React + Vite)
-    │  POST /api/transcribe  (audio blob)
-    │  POST /api/feedback    (transcript + CV + JD)
-    ▼
-Flask server (Python)
-    ├── Whisper  → speech-to-text (runs locally on server)
-    └── OpenAI / Gemini / Perplexity → coaching feedback
-```
+🔗 **Live app:** https://itadmincarego-hash.github.io/interview-prep-app/
 
 ---
 
-## Local Development
+## How it works
 
-### 1 — Backend
-
-```bash
-cd backend
-python -m venv venv
-venv/Scripts/activate          # Windows
-# source venv/bin/activate     # Mac/Linux
-pip install -r requirements.txt
-python app.py
-# → running on http://localhost:5000
+```
+Your browser
+  ├── 🎙️ Records your mic (browser MediaRecorder API)
+  ├── 📤 Sends audio → OpenAI Whisper API (transcription)
+  └── 💬 Sends transcript + CV + JD → Gemini / OpenAI / Perplexity (feedback)
 ```
 
-### 2 — Frontend (new terminal)
+Everything runs in the browser. Your API keys never touch GitHub or any third-party server.
+
+---
+
+## Setup (first time)
+
+1. Open the live link above
+2. Click ⚙️ Settings → paste your API key(s)
+3. Paste your CV and Job Description
+4. Hit **⏺ Start Recording** — answer out loud
+5. Hit **⏹ Stop & Analyse** — get instant feedback
+
+### API Keys needed
+
+| Provider | Key for transcription | Key for feedback |
+|---|---|---|
+| **Google Gemini** | OpenAI key (Whisper) | Gemini key |
+| **OpenAI** | OpenAI key (Whisper) | Same OpenAI key |
+| **Perplexity** | OpenAI key (Whisper) | Perplexity key |
+
+Get keys free:
+- [Google AI Studio](https://aistudio.google.com/apikey) — Gemini key
+- [OpenAI Platform](https://platform.openai.com/api-keys) — OpenAI key
+
+---
+
+## Microphone permissions
+
+If the mic doesn't work:
+1. Click the 🔒 **lock icon** in the browser address bar
+2. Go to **Site settings → Microphone → Allow**
+3. Refresh the page
+
+---
+
+## Local development
 
 ```bash
-cd frontend
 npm install
 npm run dev
-# → running on http://localhost:5173
 ```
 
-The Vite proxy in `vite.config.js` forwards `/api/*` to Flask automatically.
+## Auto-deploy
 
----
-
-## Deploy to Railway (free)
-
-### Backend
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
-2. Select this repo, set **Root Directory** to `backend`
-3. Railway auto-detects the `Procfile` and deploys Flask
-4. Copy the Railway URL e.g. `https://interview-prep-backend.up.railway.app`
-
-### Frontend
-1. New Service → GitHub → set Root Directory to `frontend`
-2. Add environment variable: `VITE_API_URL=https://your-backend-url.up.railway.app`
-3. Build command: `npm run build` | Output: `dist`
-
----
-
-## Environment Variables
-
-| Variable | Where | Purpose |
-|---|---|---|
-| `VITE_API_URL` | frontend `.env` | Points frontend to backend URL |
-| `PORT` | backend | Auto-set by Railway/Render |
-
----
-
-## Project Structure
-
-```
-interview-prep-app/
-├── backend/
-│   ├── app.py              ← Flask API (transcribe + feedback)
-│   ├── requirements.txt
-│   └── Procfile            ← gunicorn start command
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx         ← Main layout + state
-│   │   ├── components/
-│   │   │   ├── SettingsPanel.jsx
-│   │   │   ├── DocumentPanel.jsx
-│   │   │   ├── RecorderPanel.jsx
-│   │   │   └── FeedbackPanel.jsx
-│   │   └── hooks/
-│   │       └── useRecorder.js
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-└── README.md
-```
+Every push to `main` triggers GitHub Actions → builds React → deploys to GitHub Pages automatically.
