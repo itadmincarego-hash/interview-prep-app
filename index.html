@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0d1117;--surface:#161b22;--panel:#21262d;--border:#30363d;--accent:#2ea043;--accent2:#58a6ff;--danger:#f85149;--text:#e6edf3;--muted:#8b949e;--radius:10px;--font-body:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace}
+:root{--bg:#0d1117;--surface:#161b22;--panel:#21262d;--border:#30363d;--accent:#2ea043;--accent2:#58a6ff;--danger:#f85149;--warn:#d29922;--ok:#3fb950;--text:#e6edf3;--muted:#8b949e;--radius:10px;--font-body:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:15px}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -30,6 +30,7 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
 .bsm{background:var(--panel);color:var(--text);padding:.28rem .6rem;font-size:.75rem}
 .bprimary{background:var(--accent);color:#fff;font-weight:700;font-size:.88rem;padding:.55rem 1.1rem}
 .bdanger{background:var(--danger);color:#fff;font-weight:700;font-size:.88rem;padding:.55rem 1.1rem}
+.bblue{background:var(--accent2);color:#000;font-weight:700;font-size:.88rem;padding:.55rem 1.1rem}
 .pill{border-radius:20px;padding:.26rem .7rem;font-size:.76rem;font-weight:600;background:var(--panel);color:var(--text)}
 .pill.on{background:var(--accent2);color:#000}
 .mtrack{flex:1;height:9px;background:var(--panel);border-radius:5px;overflow:hidden}
@@ -53,6 +54,20 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
 .timer{font-family:var(--font-mono);font-size:1.25rem;color:var(--accent2);min-width:52px}
 .stxt{flex:1;font-size:.78rem;color:var(--muted)}
 .empty{color:var(--muted);text-align:center;margin-top:3rem;line-height:1.7;font-size:.875rem}
+.score-badge{display:inline-block;font-size:1.6rem;font-weight:800;padding:.3rem .8rem;border-radius:8px;margin-bottom:.5rem}
+.score-hi{background:rgba(63,185,80,.15);color:var(--ok)}
+.score-md{background:rgba(210,153,34,.15);color:var(--warn)}
+.score-lo{background:rgba(248,81,73,.15);color:var(--danger)}
+.fb-section{margin-top:.6rem}
+.fb-section h3{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem}
+.fb-section.str h3{color:var(--ok)}
+.fb-section.imp h3{color:var(--warn)}
+.fb-section.ideal h3{color:var(--accent2)}
+.fb-section ul{padding-left:1.1rem;display:flex;flex-direction:column;gap:.25rem}
+.fb-section li{font-size:.875rem;line-height:1.55}
+.fb-section p{font-size:.875rem;line-height:1.6;font-style:italic}
+.qbox{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:.9rem;line-height:1.6;color:var(--text);min-height:60px;white-space:pre-wrap}
+.qbox.empty-q{color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -107,12 +122,10 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
   </div>
 
   <div class="col">
+
+    <!-- QUESTION CARD -->
     <div class="card">
-      <span class="ctitle">&#127897;&#65039; Voice Recording</span>
-      <div>
-        <label>Microphone</label>
-        <select id="micSel"><option value="default">Default microphone</option></select>
-      </div>
+      <span class="ctitle">&#129504; Interview Question</span>
       <div>
         <label>Question Type</label>
         <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:4px" id="pills">
@@ -123,8 +136,21 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
         </div>
       </div>
       <div>
-        <label>Custom Question <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-        <input type="text" id="cq" placeholder="e.g. Tell me about a time you led a project..."/>
+        <label>Question</label>
+        <div class="qbox empty-q" id="qDisplay">Click "Generate Question" to begin...</div>
+      </div>
+      <div class="row">
+        <button id="genQBtn" class="bblue">&#9889; Generate Question</button>
+        <button id="newQBtn" class="bsm">&#8635; New Question</button>
+      </div>
+    </div>
+
+    <!-- RECORDING CARD -->
+    <div class="card">
+      <span class="ctitle">&#127897;&#65039; Record Your Answer</span>
+      <div>
+        <label>Microphone</label>
+        <select id="micSel"><option value="default">Default microphone</option></select>
       </div>
       <div class="row">
         <span style="font-size:.72rem;color:var(--muted);min-width:60px">Mic level</span>
@@ -134,11 +160,12 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
       <div id="merr" class="ebox hide"></div>
       <div class="row">
         <span class="timer" id="tmr">00:00</span>
-        <span class="stxt" id="stxt">Ready — add API key in Settings first</span>
+        <span class="stxt" id="stxt">Generate a question first, then record your answer</span>
         <button id="recBtn" class="bprimary">&#9210; Start Recording</button>
       </div>
     </div>
 
+    <!-- FEEDBACK CARD -->
     <div class="card">
       <div class="row" style="margin-bottom:.25rem">
         <span class="ctitle" style="flex:1">&#128203; Transcript &amp; Feedback</span>
@@ -148,18 +175,19 @@ label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-tra
       <div class="farea" id="farea">
         <div class="empty" id="empty">
           <div style="font-size:2rem;margin-bottom:12px">&#127897;&#65039;</div>
-          <p>Record your answer and get instant AI coaching.</p>
+          <p>Generate a question, record your answer, get instant AI coaching.</p>
           <p style="margin-top:6px;font-size:.75rem">Add your API key in &#9881;&#65039; Settings first.</p>
         </div>
       </div>
     </div>
+
   </div>
 </main>
 
 <script>
 'use strict';
 const P={"Google Gemini":["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-2.0-flash"],"OpenAI":["gpt-4o-mini","gpt-4o","gpt-4-turbo"],"Perplexity":["sonar","sonar-pro"]};
-const S={prov:"Google Gemini",mdl:"gemini-2.5-flash",ak:"",oak:"",qt:"Behavioral",rec:false,busy:false,secs:0,log:[]};
+const S={prov:"Google Gemini",mdl:"gemini-2.5-flash",ak:"",oak:"",qt:"Behavioral",rec:false,busy:false,secs:0,log:[],question:""};
 let MR=null,chunks=[],actx=null,anim=null,tick_=null;
 const G=id=>document.getElementById(id);
 
@@ -196,12 +224,40 @@ function showErr(m){G("merr").innerHTML="<strong>&#128683; Mic:</strong> "+m;G("
 function hideErr(){G("merr").classList.add("hide");}
 function setMeter(p){G("mfill").style.width=p+"%";G("mfill").style.background=p>80?"var(--danger)":p>50?"#f0a500":"var(--accent)";G("mpct").textContent=Math.round(p)+"%";}
 function setStatus(m){G("stxt").textContent=m;}
-function setBusy(b){S.busy=b;G("spin").classList.toggle("hide",!b);G("recBtn").disabled=b;}
+function setBusy(b){S.busy=b;G("spin").classList.toggle("hide",!b);G("recBtn").disabled=b;G("genQBtn").disabled=b;G("newQBtn").disabled=b;}
 function startTmr(){S.secs=0;tick_=setInterval(()=>{S.secs++;const m=String(Math.floor(S.secs/60)).padStart(2,"0"),s=String(S.secs%60).padStart(2,"0");G("tmr").textContent=m+":"+s;},1000);}
 function stopTmr(){clearInterval(tick_);G("tmr").textContent="00:00";}
 
+// --- generate question ---
+async function generateQuestion(){
+  const cv=G("cvTxt").value.trim();
+  const jd=G("jdTxt").value.trim();
+  if(!cv&&!jd){addEntry("err","Paste your CV and/or Job Description first.");return;}
+  if(!S.ak){addEntry("err",S.prov+" key needed — add it in Settings.");return;}
+  setBusy(true);setStatus("Generating question...");addEntry("info","Generating interview question...");
+  const sys="You are a senior recruiter. Generate ONE "+S.qt.toLowerCase()+" interview question tailored to this candidate. Output ONLY the question, no preamble.";
+  const usr="CV:\n"+cv.slice(0,2500)+"\n\nJob Description:\n"+jd.slice(0,2500);
+  try{
+    let q;
+    if(S.prov==="Google Gemini") q=await gemini(S.mdl,S.ak,sys+"\n\n"+usr);
+    else q=await compat(S.prov,S.mdl,S.ak,sys,usr);
+    rmInfo("Generating interview question");
+    S.question=q.trim();
+    G("qDisplay").textContent=S.question;
+    G("qDisplay").classList.remove("empty-q");
+    setStatus("Question ready — start recording when ready");
+  }catch(e){
+    rmInfo("Generating interview question");
+    addEntry("err","Question generation failed: "+e.message);
+    setStatus("Error");
+  }finally{setBusy(false);}
+}
+G("genQBtn").onclick=generateQuestion;
+G("newQBtn").onclick=generateQuestion;
+
 // --- recording ---
 async function startRec(){
+  if(!S.question){addEntry("err","Generate a question first.");return;}
   hideErr();chunks=[];
   let stream;
   try{
@@ -237,19 +293,16 @@ G("recBtn").onclick=()=>S.rec?stopRec():startRec();
 
 // --- entries ---
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function md(r){
-  let s=esc(r).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>")
-    .replace(/^### (.+)$/gm,"<h3>$1</h3>").replace(/^## (.+)$/gm,"<h2>$1</h2>").replace(/^# (.+)$/gm,"<h1>$1</h1>")
-    .replace(/`([^`]+)`/g,"<code>$1</code>").replace(/^[-*] (.+)$/gm,"<li>$1</li>").replace(/^\d+\. (.+)$/gm,"<li>$1</li>");
-  s=s.replace(/(<li>[\s\S]*?<\/li>\n?)+/g,x=>"<ul>"+x+"</ul>");
-  return "<p>"+s.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>")+"</p>";
-}
 function addEntry(type,text){
   S.log.push({type,text});
   G("empty").classList.add("hide");
   const d=document.createElement("div");d.className="fu";
   if(type==="tx"){d.className+=" etx";d.innerHTML='<span class="tag ty">You said</span><p style="font-size:.9rem;line-height:1.65;font-style:italic;margin-top:6px">'+esc(text)+"</p>";}
-  else if(type==="fb"){d.className+=" efb";d.innerHTML='<span class="tag tai">AI Feedback</span><div style="margin-top:6px;font-size:.875rem">'+md(text)+"</div>";}
+  else if(type==="fb"){
+    d.className+=" efb";
+    const parsed=parseStructuredFeedback(text);
+    d.innerHTML='<span class="tag tai">AI Feedback</span>'+renderStructured(parsed);
+  }
   else if(type==="info"){d.style.cssText="font-size:.78rem;color:var(--muted);padding:0 .5rem";d.textContent=text;d.dataset.info=text;}
   else if(type==="err"){d.className="ebox fu";d.innerHTML="<strong>Error:</strong> "+esc(text);}
   G("farea").appendChild(d);G("farea").scrollTop=G("farea").scrollHeight;
@@ -257,6 +310,48 @@ function addEntry(type,text){
 function rmInfo(k){G("farea").querySelectorAll("[data-info]").forEach(el=>{if(el.dataset.info.includes(k))el.remove();});}
 G("clrBtn").onclick=()=>{S.log=[];G("farea").innerHTML="";G("farea").appendChild(G("empty"));G("empty").classList.remove("hide");};
 G("cpyBtn").onclick=()=>navigator.clipboard.writeText(S.log.filter(e=>e.type!=="info").map(e=>e.type==="tx"?"YOU SAID:\n"+e.text:e.type==="fb"?"AI FEEDBACK:\n"+e.text:e.text).join("\n\n---\n\n")).catch(()=>{});
+
+// --- structured feedback parser ---
+function parseStructuredFeedback(raw){
+  const lines=raw.split("\n").map(x=>x.trim()).filter(Boolean);
+  const out={score:"",strengths:[],improvements:[],ideal:[]};
+  let section="";
+  for(const line of lines){
+    if(line.toUpperCase().startsWith("SCORE:")){out.score=line.split(":").slice(1).join(":").trim();continue;}
+    if(line.toUpperCase().startsWith("STRENGTHS:")){section="strengths";const rest=line.slice(10).trim();if(rest)out.strengths.push(rest.replace(/^- /,""));continue;}
+    if(line.toUpperCase().startsWith("IMPROVEMENTS:")){section="improvements";const rest=line.slice(13).trim();if(rest)out.improvements.push(rest.replace(/^- /,""));continue;}
+    if(line.toUpperCase().startsWith("IDEAL ANSWER:")){section="ideal";const rest=line.slice(13).trim();if(rest)out.ideal.push(rest);continue;}
+    if(section==="strengths")out.strengths.push(line.replace(/^- /,""));
+    else if(section==="improvements")out.improvements.push(line.replace(/^- /,""));
+    else if(section==="ideal")out.ideal.push(line);
+  }
+  return out;
+}
+function scoreClass(s){
+  const n=parseFloat(s);
+  if(isNaN(n))return"score-md";
+  return n>=70?"score-hi":n>=40?"score-md":"score-lo";
+}
+function renderStructured(p){
+  let h="";
+  if(p.score){
+    h+=`<div style="margin-top:8px"><span class="score-badge ${scoreClass(p.score)}">${esc(p.score)}</span></div>`;
+  }
+  if(p.strengths.length){
+    h+=`<div class="fb-section str"><h3>&#10004; Strengths</h3><ul>${p.strengths.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  }
+  if(p.improvements.length){
+    h+=`<div class="fb-section imp"><h3>&#9651; Improvements</h3><ul>${p.improvements.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  }
+  if(p.ideal.length){
+    h+=`<div class="fb-section ideal"><h3>&#128161; Ideal Answer</h3><p>${p.ideal.map(esc).join("<br>")}</p></div>`;
+  }
+  if(!h){
+    // fallback: no structured sections found, render raw
+    h=`<div style="margin-top:6px;font-size:.875rem;white-space:pre-wrap">${esc(p.score||"")}${Object.values(p).flat().join("\n")}</div>`;
+  }
+  return h;
+}
 
 // --- API ---
 async function transcribe(blob,key){
@@ -277,10 +372,10 @@ async function compat(prov,model,key,sys,usr){
   return(await r.json()).choices?.[0]?.message?.content||"No response";
 }
 async function getFb(tx){
-  const cv=G("cvTxt").value.trim()||"(not provided)",jd=G("jdTxt").value.trim()||"(not provided)",cq=G("cq").value.trim();
-  const qh=cq?'Custom question: "'+cq+'"':"Question type: "+S.qt;
-  const sys="You are an expert interview coach. Give structured, specific, actionable feedback using the STAR framework.";
-  const usr="## Candidate CV\n"+cv+"\n\n## Job Description\n"+jd+"\n\n## "+qh+"\n\n## Answer\n"+tx+"\n\nProvide:\n1. **STAR Score** (x/10)\n2. **Strengths** — 2-3 bullets\n3. **Improvements** — 2-3 bullets\n4. **Suggested Reframe**\n5. **JD Keywords** to use next time";
+  const cv=G("cvTxt").value.trim()||"(not provided)";
+  const jd=G("jdTxt").value.trim()||"(not provided)";
+  const sys=`You are an expert interview coach. Evaluate the answer against the question, CV and job description.\n\nReply in this EXACT plain-text format:\n\nSCORE: [0-100]/100\n\nSTRENGTHS:\n- point\n- point\n\nIMPROVEMENTS:\n- point\n- point\n\nIDEAL ANSWER:\n[2-3 sentence model answer]`;
+  const usr=`Question: ${S.question}\n\nAnswer: ${tx}\n\nCV:\n${cv.slice(0,1000)}\n\nJob Description:\n${jd.slice(0,1000)}`;
   if(S.prov==="Google Gemini")return gemini(S.mdl,S.ak,sys+"\n\n"+usr);
   return compat(S.prov,S.mdl,S.ak,sys,usr);
 }
