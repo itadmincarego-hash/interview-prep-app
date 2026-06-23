@@ -220,6 +220,9 @@ button:not(:disabled):hover{opacity:.85}
 /* ── Char counter ── */
 .char-counter{font-size:10px;color:var(--faint);margin-left:auto}
 .char-counter.ready-badge{color:var(--ok);font-weight:700}
+
+/* ── Folder picker note ── */
+.folder-note{font-size:10px;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -277,8 +280,12 @@ button:not(:disabled):hover{opacity:.85}
   <!-- Row 2: Output folder -->
   <div class="setup-row">
     <span class="label">2. Output Folder:</span>
-    <input type="text" id="inp-outdir" class="inp-dir" value="~/InterviewPrepOutput"/>
-    <button class="btn-dim" onclick="alert('Folder selection works in the desktop app.')">Browse…</button>
+    <input type="text" id="inp-outdir" class="inp-dir" value="~/InterviewPrepOutput" readonly/>
+    <!-- Hidden native folder picker -->
+    <input type="file" id="folder-picker" webkitdirectory mozdirectory multiple
+           style="display:none" onchange="onFolderPicked(this)"/>
+    <button class="btn-dim" onclick="document.getElementById('folder-picker').click()">Browse…</button>
+    <span class="folder-note" id="folder-note">📁 Recordings saved in browser memory (web mode)</span>
   </div>
 
   <!-- Row 3: Go Ready + status -->
@@ -408,7 +415,7 @@ button:not(:disabled):hover{opacity:.85}
       <div class="rec-controls">
         <span id="timer">00:00</span>
         <button class="btn-green" id="btn-record" onclick="toggleRecord()" disabled>Start Recording</button>
-        <button class="btn-dim" id="btn-open-sess" onclick="alert('Session folder opens in the desktop app.')" disabled>
+        <button class="btn-dim" id="btn-open-sess" onclick="openSessionFolder()" disabled>
           📂 Open Session Folder
         </button>
         <div class="waveform" id="waveform">
@@ -497,6 +504,7 @@ let state = {
   levelAnim: null,
   waveAnim: null,
   micTestData: null,
+  outputFolder: null,   // FileSystemDirectoryHandle or null
 };
 
 // Provider model lists
@@ -506,6 +514,53 @@ const PROVIDER_MODELS = {
   'OpenAI': ['gpt-4o-mini','gpt-4o'],
   'Custom / Other': [],
 };
+
+// ══════════════════════════════════════════════════════════════
+//  Folder picker
+// ══════════════════════════════════════════════════════════════
+function onFolderPicked(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+
+  // webkitRelativePath gives "FolderName/..." — extract the root folder name
+  const firstPath = files[0].webkitRelativePath || '';
+  const rootFolder = firstPath.split('/')[0] || 'Selected Folder';
+
+  document.getElementById('inp-outdir').value = rootFolder;
+  document.getElementById('folder-note').textContent =
+    '✓ Folder selected: ' + rootFolder + ' (' + files.length + ' existing files)';
+  document.getElementById('folder-note').style.color = 'var(--ok)';
+  setStatus('Output folder set: ' + rootFolder, 'ready');
+}
+
+// Modern File System Access API (Chrome 86+) — falls back gracefully
+async function browseFolder() {
+  if (window.showDirectoryPicker) {
+    try {
+      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      state.outputFolder = handle;
+      document.getElementById('inp-outdir').value = handle.name;
+      document.getElementById('folder-note').textContent = '✓ Folder ready: ' + handle.name;
+      document.getElementById('folder-note').style.color = 'var(--ok)';
+      setStatus('Output folder set: ' + handle.name, 'ready');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        setStatus('Could not open folder: ' + err.message, 'idle');
+      }
+    }
+  } else {
+    // Fallback: trigger the hidden <input webkitdirectory>
+    document.getElementById('folder-picker').click();
+  }
+}
+
+function openSessionFolder() {
+  if (state.outputFolder) {
+    setStatus('Folder handle: ' + state.outputFolder.name + ' (use File Explorer to open)', 'ready');
+  } else {
+    setStatus('No output folder selected yet — use Browse…', 'idle');
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 //  Placeholder helpers
@@ -543,7 +598,7 @@ function fakeUpload(panel) {
   const ph = panel === 'cv' ? CV_PH : JD_PH;
   el.value = ph; el.classList.add('placeholder-active');
   document.getElementById(fn).textContent = 'Loaded: ' + name;
-  setStatus(`Loaded ${name} — paste your real content in the desktop app`, 'muted');
+  setStatus('Loaded ' + name + ' — paste your real content in the text area', 'muted');
   onDocInput(panel);
 }
 
@@ -557,6 +612,20 @@ document.getElementById('sel-provider').addEventListener('change', function() {
   sel.innerHTML = models.map(m => `<option>${m}</option>`).join('') || '<option></option>';
   document.getElementById('url-group').style.display = p === 'Custom / Other' ? 'flex' : 'none';
 });
+
+// Wire Browse button to use modern API with fallback
+document.querySelector('button.btn-dim[onclick*="folder-picker"]') &&
+  document.querySelector('button.btn-dim[onclick*="folder-picker"]').removeAttribute('onclick');
+
+// Override Browse button to use browseFolder()
+(function() {
+  const btns = document.querySelectorAll('#setup button.btn-dim');
+  btns.forEach(b => {
+    if (b.textContent.trim() === 'Browse…') {
+      b.onclick = browseFolder;
+    }
+  });
+})();
 
 // ══════════════════════════════════════════════════════════════
 //  Status helpers
@@ -598,9 +667,12 @@ function goReady() {
 }
 function resetAll() {
   state.ready = false; state.micTested = false; state.question = '';
-  state.qaHistory = []; state.attempts = 0;
+  state.qaHistory = []; state.attempts = 0; state.outputFolder = null;
   document.getElementById('inp-key').value = '';
   document.getElementById('attempt-count').textContent = '0';
+  document.getElementById('inp-outdir').value = '~/InterviewPrepOutput';
+  document.getElementById('folder-note').textContent = '📁 Recordings saved in browser memory (web mode)';
+  document.getElementById('folder-note').style.color = '';
   clearPanel('cv'); clearPanel('jd');
   document.getElementById('lbl-ready').textContent = 'STATUS: NOT READY';
   document.getElementById('lbl-ready').className = 'not-ready';
